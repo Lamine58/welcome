@@ -1,0 +1,22 @@
+{
+  "name": "portfolio-3d",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev --port 3001",
+    "generate": "nuxt generate",
+    "generate:gh": "NUXT_APP_BASE_URL=/welcome/ nuxt generate",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "bootstrap-icons": "^1.13.1",
+    "gsap": "^3.12.5",
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.170.0",
+    "nuxt": "^3.14.0",
+    "typescript": "^5.6.0"
+  }
+}
