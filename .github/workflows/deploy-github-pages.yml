@@ -1,3 +1,10 @@
+# Publie .output/public sur la branche gh-pages.
+# ⚠️ Réglage obligatoire sur GitHub (une seule fois) :
+#    Repo welcome → Settings → Pages
+#    Source : « Deploy from a branch » (PAS « GitHub Actions »)
+#    Branch : gh-pages  |  Folder : / (root)
+# URL : https://lamine58.github.io/welcome/
+
 name: Deploy Nuxt to GitHub Pages
 
 on:
@@ -6,16 +13,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,25 +30,16 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
-        run: npm install
+      - run: npm install
 
-      - name: Generate static site
+      - name: Generate static site (/welcome/)
         run: npm run generate:gh
         env:
           NUXT_APP_BASE_URL: /welcome/
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Publish to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: .output/public
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .output/public
+          publish_branch: gh-pages
