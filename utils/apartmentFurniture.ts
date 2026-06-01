@@ -15,17 +15,17 @@ function box(
   y: number,
   z: number,
   parent: THREE.Object3D,
-  castShadow = true,
+  castShadow = false,
 ) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material)
   m.position.set(x, y, z)
   m.castShadow = castShadow
-  m.receiveShadow = true
+  m.receiveShadow = false
   parent.add(m)
   return m
 }
 
-export function buildDetailedFurniture(scene: THREE.Scene) {
+export function buildDetailedFurniture(scene: THREE.Scene, lite = false) {
   const root = new THREE.Group()
   scene.add(root)
 
@@ -152,7 +152,7 @@ export function buildDetailedFurniture(scene: THREE.Scene) {
   box(0.35, 0.04, 0.35, woodDark, 0, 0.02, 0, lamp)
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 1.35, 10), wood)
   pole.position.set(0, 0.7, 0)
-  pole.castShadow = true
+  if (!lite) pole.castShadow = true
   lamp.add(pole)
   const shade = new THREE.Mesh(
     new THREE.CylinderGeometry(0.22, 0.32, 0.35, 16, 1, true),
@@ -175,7 +175,7 @@ export function buildDetailedFurniture(scene: THREE.Scene) {
     mat(0x8b4513),
   )
   potM.position.y = 0.21
-  potM.castShadow = true
+  if (!lite) potM.castShadow = true
   plant.add(potM)
   for (let i = 0; i < 5; i++) {
     const leaf = new THREE.Mesh(
@@ -193,7 +193,6 @@ export function buildDetailedFurniture(scene: THREE.Scene) {
   )
   rug2.rotation.x = -Math.PI / 2
   rug2.position.set(2.5, 0.012, 3.5)
-  rug2.receiveShadow = true
   root.add(rug2)
 
   // —— Cadres muraux ——
@@ -238,6 +237,7 @@ export function buildWallPhotoFrame(
   frameTexture: THREE.Texture,
   photoTexture: THREE.Texture,
   room: { w: number; d: number },
+  lite = false,
 ) {
   const group = new THREE.Group()
   group.position.set(-room.w / 2 + 0.11, 1.82, 0.6)
@@ -278,10 +278,11 @@ export function buildWallPhotoFrame(
   frame.position.z = depth * 0.5 + 0.032
   group.add(frame)
 
-  // Lumière locale sur le cadre
-  const spot = new THREE.PointLight(0xfff4e0, 2.8, 5, 1.2)
-  spot.position.set(0.85, 0.15, 0.45)
-  group.add(spot)
+  if (!lite) {
+    const spot = new THREE.PointLight(0xfff4e0, 2.2, 5, 1.2)
+    spot.position.set(0.85, 0.15, 0.45)
+    group.add(spot)
+  }
 
   return group
 }

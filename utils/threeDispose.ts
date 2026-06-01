@@ -1,13 +1,17 @@
 import * as THREE from 'three'
 
-export function configureTexture(tex: THREE.Texture, renderer?: THREE.WebGLRenderer) {
+export function configureTexture(
+  tex: THREE.Texture,
+  renderer?: THREE.WebGLRenderer,
+  opts?: { lite?: boolean },
+) {
   tex.colorSpace = THREE.SRGBColorSpace
   tex.generateMipmaps = true
   tex.minFilter = THREE.LinearMipmapLinearFilter
   tex.magFilter = THREE.LinearFilter
   if (renderer) {
     const max = renderer.capabilities.getMaxAnisotropy()
-    tex.anisotropy = Math.min(4, max)
+    tex.anisotropy = Math.min(opts?.lite ? 1 : 2, max)
   }
 }
 

@@ -2,11 +2,17 @@
   <Teleport to="body">
     <Transition name="panel">
       <div v-if="doorId" class="overlay" @click.self="emit('close')">
-        <article class="panel" role="dialog" :aria-label="title">
-          <button type="button" class="panel__close" aria-label="Fermer" @click="emit('close')">
-            <i class="bi bi-x-lg" />
-          </button>
-          <header class="panel__head">
+        <div class="panel-stage">
+          <div class="panel-3d">
+            <article class="panel" role="dialog" :aria-label="title">
+              <span class="panel__screw panel__screw--tl" aria-hidden="true" />
+              <span class="panel__screw panel__screw--tr" aria-hidden="true" />
+              <span class="panel__screw panel__screw--bl" aria-hidden="true" />
+              <span class="panel__screw panel__screw--br" aria-hidden="true" />
+              <button type="button" class="panel__close" aria-label="Fermer" @click="emit('close')">
+                <i class="bi bi-x-lg" />
+              </button>
+              <header class="panel__head">
             <div class="panel__icon-wrap">
               <i v-if="doorMeta" :class="`bi bi-${doorMeta.icon}`" />
             </div>
@@ -187,7 +193,9 @@
               </div>
             </a>
           </div>
-        </article>
+            </article>
+          </div>
+        </div>
       </div>
     </Transition>
   </Teleport>
@@ -232,26 +240,74 @@ const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: rgba(10, 8, 6, 0.45);
+  background: rgba(10, 8, 6, 0.52);
+}
+
+.panel-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-height: 92vh;
+}
+
+.panel-3d {
+  max-width: min(960px, 100%);
+  width: 100%;
 }
 
 .panel {
   position: relative;
-  width: min(960px, 100%);
-  max-height: 90vh;
+  width: 100%;
+  max-height: min(88vh, 820px);
   overflow-y: auto;
-  padding: 2rem 2.25rem;
-  border-radius: 8px;
-  background: linear-gradient(165deg, #f5ebe0 0%, #e8ddd0 100%);
+  padding: 2rem 2.25rem 2.1rem;
+  border-radius: 6px;
+  background: linear-gradient(165deg, #faf8f4 0%, #ebe6dc 45%, #ddd6ca 100%);
   color: #2c2419;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(139, 109, 75, 0.3);
+  border: 3px solid #d8d0c4;
+  box-shadow:
+    0 1px 0 #fff inset,
+    0 -1px 0 rgba(0, 0, 0, 0.06) inset,
+    0 22px 50px rgba(0, 0, 0, 0.5),
+    0 5px 0 #b8aea0,
+    0 32px 60px rgba(0, 0, 0, 0.28);
 }
+
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(139, 109, 75, 0.22);
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.panel > *:not(.panel__screw) {
+  position: relative;
+  z-index: 1;
+}
+
+.panel__screw {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #e8e4dc, #9a9080 70%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  z-index: 2;
+}
+
+.panel__screw--tl { top: 12px; left: 14px; }
+.panel__screw--tr { top: 12px; right: 14px; }
+.panel__screw--bl { bottom: 12px; left: 14px; }
+.panel__screw--br { bottom: 12px; right: 14px; }
 
 .panel__close {
   position: absolute;
-  top: 0.85rem;
-  right: 0.85rem;
+  top: 1rem;
+  right: 1rem;
   width: 36px;
   height: 36px;
   display: flex;
@@ -260,7 +316,10 @@ const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
   font-size: 1rem;
   color: #6b5a48;
   background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(107, 90, 72, 0.2);
   border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  z-index: 3;
 }
 
 .panel__close:hover {
@@ -624,15 +683,14 @@ const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
   font-weight: 500;
 }
 
-/* Zoom centré */
 .panel-enter-active,
 .panel-leave-active {
   transition: opacity 0.4s ease;
 }
 
-.panel-enter-active .panel,
-.panel-leave-active .panel {
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease;
+.panel-enter-active .panel-3d,
+.panel-leave-active .panel-3d {
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease;
 }
 
 .panel-enter-from,
@@ -640,8 +698,8 @@ const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
   opacity: 0;
 }
 
-.panel-enter-from .panel,
-.panel-leave-to .panel {
+.panel-enter-from .panel-3d,
+.panel-leave-to .panel-3d {
   transform: scale(0.82);
   opacity: 0;
 }

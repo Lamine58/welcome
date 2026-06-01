@@ -64,9 +64,8 @@ function onDoorOpen(id: string) {
 }
 
 function closePanel() {
-  sceneRef.value?.closeAllDoors(() => {
-    activeDoor.value = null
-  })
+  activeDoor.value = null
+  sceneRef.value?.closeAllDoors()
 }
 
 function onGlobalKeydown(e: KeyboardEvent) {
@@ -153,9 +152,8 @@ onUnmounted(() => {
   padding: 0.5rem 1rem;
   font-size: 0.78rem;
   color: #f5ebe0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.5);
   border-radius: 4px;
-  backdrop-filter: blur(8px);
 }
 
 .hud__hint kbd {

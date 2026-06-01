@@ -48,6 +48,9 @@ let disposed = false
 let isPageVisible = true
 let needsHoverCheck = false
 let perfLite = false
+let maxPixelRatio = 1.75
+let scenePaused = false
+let lastHoveredDoorId: string | null = null
 const loadedTextures: THREE.Texture[] = []
 const pointer = new THREE.Vector2()
 
@@ -135,22 +138,23 @@ function makeLabelTexture(label: string, color: string) {
     ctx.fillText(line.trim(), 128, 58 + i * 28)
   })
   const tex = new THREE.CanvasTexture(canvas)
-  configureTexture(tex, renderer ?? undefined)
+  configureTexture(tex, renderer ?? undefined, { lite: perfLite })
   loadedTextures.push(tex)
   return tex
 }
 
 function createRoom() {
+  const useShadows = !perfLite
   const floorMat = new THREE.MeshStandardMaterial({
     color: 0x5c4033,
     roughness: 0.82,
   })
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM.w, ROOM.d), floorMat)
   floor.rotation.x = -Math.PI / 2
-  floor.receiveShadow = true
+  floor.receiveShadow = useShadows
   scene.add(floor)
 
-  for (let i = -6; i <= 6; i += 1.2) {
+  for (let i = -6; i <= 6; i += 2) {
     const plank = new THREE.Mesh(
       new THREE.PlaneGeometry(1.15, ROOM.d),
       new THREE.MeshStandardMaterial({
@@ -160,7 +164,7 @@ function createRoom() {
     )
     plank.rotation.x = -Math.PI / 2
     plank.position.set(i, 0.008, 0)
-    plank.receiveShadow = true
+    plank.receiveShadow = useShadows
     scene.add(plank)
   }
 
@@ -189,7 +193,7 @@ function createRoom() {
     const w = new THREE.Mesh(geo, wallMat)
     w.position.set(pos[0]!, pos[1]!, pos[2]!)
     w.rotation.set(rot[0]!, rot[1]!, rot[2]!)
-    w.receiveShadow = true
+    w.receiveShadow = useShadows
     scene.add(w)
   })
 
@@ -235,7 +239,7 @@ function createDoor(door: ApartmentDoor, x: number, y: number, z: number, rotY: 
   })
 
   const frame = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.14), frameMat)
-  frame.castShadow = true
+  frame.castShadow = !perfLite
   group.add(frame)
 
   const hinge = new THREE.Group()
@@ -243,7 +247,7 @@ function createDoor(door: ApartmentDoor, x: number, y: number, z: number, rotY: 
 
   const panel = new THREE.Mesh(new THREE.BoxGeometry(1.02, 2.05, 0.09), doorMat)
   panel.position.set(0.51, 0, 0)
-  panel.castShadow = true
+  panel.castShadow = !perfLite
   hinge.add(panel)
 
   const plate = new THREE.Mesh(
@@ -285,21 +289,18 @@ function placeDoors() {
 }
 
 function createLights() {
-  scene.add(new THREE.HemisphereLight(0xfff8ee, 0x3d2818, 0.45))
+  scene.add(new THREE.AmbientLight(0xfff8ee, 0.35))
+  scene.add(new THREE.HemisphereLight(0xfff8ee, 0x3d2818, 0.5))
   const main = new THREE.PointLight(0xffe4c4, 2.2, 22)
   main.position.set(0, 2.9, 0)
-  if (!perfLite) {
-    main.castShadow = true
-    const shadowSize = perfLite ? 512 : 1024
-    main.shadow.mapSize.set(shadowSize, shadowSize)
-  }
   scene.add(main)
-  const pendant = new THREE.PointLight(0xffd699, 1.2, 10)
-  pendant.position.set(0, 2.6, 0)
-  scene.add(pendant)
-  const windowLight = new THREE.DirectionalLight(0xc8e8ff, 0.55)
+  if (!perfLite) {
+    const pendant = new THREE.PointLight(0xffd699, 0.9, 10)
+    pendant.position.set(0, 2.6, 0)
+    scene.add(pendant)
+  }
+  const windowLight = new THREE.DirectionalLight(0xc8e8ff, 0.45)
   windowLight.position.set(0, 2.5, 10)
-  if (!perfLite) windowLight.castShadow = true
   scene.add(windowLight)
 }
 
@@ -480,28 +481,33 @@ function onPointerMove(e: PointerEvent) {
   needsHoverCheck = true
 }
 
+function setDoorHighlight(doorId: string | null) {
+  if (doorId === lastHoveredDoorId) return
+  lastHoveredDoorId = doorId
+  doorGroups.forEach((g) => {
+    const panel = (g.userData.hinge as THREE.Group).children[0] as THREE.Mesh
+    const id = g.userData.doorId as string
+    ;(panel.material as THREE.MeshStandardMaterial).emissive.setHex(
+      id === doorId ? 0x443322 : 0x000000,
+    )
+  })
+}
+
 function updateDoorHover() {
-  if (!raycaster || !camera || isZoomed.value) return
+  if (!raycaster || !camera || isZoomed.value || scenePaused) return
   raycaster.setFromCamera(pointer, camera)
   const hits = raycaster.intersectObjects(doorGroups, true)
   const group = hits.length ? findDoorGroup(hits[0]!.object) : null
+  const doorId = group ? (group.userData.doorId as string) : null
 
-  if (group) {
-    hoveredDoor.value = props.doors.find((d) => d.id === group.userData.doorId) ?? null
+  if (doorId) {
+    hoveredDoor.value = props.doors.find((d) => d.id === doorId) ?? null
     document.body.style.cursor = 'pointer'
-    doorGroups.forEach((g) => {
-      const panel = (g.userData.hinge as THREE.Group).children[0] as THREE.Mesh
-      ;(panel.material as THREE.MeshStandardMaterial).emissive.setHex(
-        g === group ? 0x443322 : 0x000000,
-      )
-    })
+    setDoorHighlight(doorId)
   } else {
     hoveredDoor.value = null
     document.body.style.cursor = 'default'
-    doorGroups.forEach((g) => {
-      const panel = (g.userData.hinge as THREE.Group).children[0] as THREE.Mesh
-      ;(panel.material as THREE.MeshStandardMaterial).emissive.setHex(0x000000)
-    })
+    setDoorHighlight(null)
   }
 }
 
@@ -557,12 +563,13 @@ function resize() {
   camera.aspect = w / h
   camera.updateProjectionMatrix()
   renderer.setSize(w, h)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio))
 }
 
 function animate() {
-  if (disposed || !isPageVisible) return
+  if (disposed) return
   animationId = requestAnimationFrame(animate)
+  if (!isPageVisible || (scenePaused && zoomState === 'idle')) return
 
   if (needsHoverCheck) {
     needsHoverCheck = false
@@ -573,6 +580,10 @@ function animate() {
     const hinge = g.userData.hinge as THREE.Group
     let amount = g.userData.openAmount as number
     const target = g.userData.targetOpen as number
+    if (Math.abs(target - amount) < 0.002) {
+      hinge.rotation.y = -target * (Math.PI / 2) * 0.9
+      return
+    }
     amount += (target - amount) * 0.1
     g.userData.openAmount = amount
     hinge.rotation.y = -amount * (Math.PI / 2) * 0.9
@@ -592,8 +603,12 @@ function init() {
   if (!canvas || disposed) return
 
   perfLite =
-    window.matchMedia('(max-width: 768px), (pointer: coarse)').matches ||
-    window.devicePixelRatio > 2
+    window.matchMedia('(max-width: 900px), (pointer: coarse)').matches ||
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+    window.devicePixelRatio > 2 ||
+    (navigator.hardwareConcurrency ?? 8) <= 4
+
+  maxPixelRatio = perfLite ? 1.15 : 1.75
 
   scene = new THREE.Scene()
   scene.background = new THREE.Color(0x1a1410)
@@ -609,11 +624,9 @@ function init() {
     powerPreference: 'high-performance',
     failIfMajorPerformanceCaveat: false,
   })
-  const maxDpr = perfLite ? 1.25 : 2
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDpr))
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxPixelRatio))
   renderer.outputColorSpace = THREE.SRGBColorSpace
-  renderer.shadowMap.enabled = !perfLite
-  if (!perfLite) renderer.shadowMap.type = THREE.PCFSoftShadowMap
+  renderer.shadowMap.enabled = false
 
   controls = new OrbitControls(camera, canvas)
   controls.target.copy(defaultCamTarget)
@@ -622,13 +635,13 @@ function init() {
   controls.maxDistance = 6.5
   controls.minPolarAngle = 0.55
   controls.maxPolarAngle = 1.52
-  controls.enableDamping = true
-  controls.dampingFactor = 0.06
+  controls.enableDamping = !perfLite
+  controls.dampingFactor = 0.08
 
   raycaster = new THREE.Raycaster()
 
   createRoom()
-  buildDetailedFurniture(scene)
+  buildDetailedFurniture(scene, perfLite)
   buildWindow(scene, ROOM)
   placeDoors()
   createLights()
@@ -644,10 +657,10 @@ function init() {
         photoTex.dispose()
         return
       }
-      configureTexture(frameTex, renderer)
-      configureTexture(photoTex, renderer)
+      configureTexture(frameTex, renderer, { lite: perfLite })
+      configureTexture(photoTex, renderer, { lite: perfLite })
       loadedTextures.push(frameTex, photoTex)
-      scene.add(buildWallPhotoFrame(frameTex, photoTex, ROOM))
+      scene.add(buildWallPhotoFrame(frameTex, photoTex, ROOM, perfLite))
     })
     .catch(() => {
       /* textures optionnelles — la scène reste utilisable */
@@ -696,6 +709,13 @@ function dispose() {
   document.body.style.cursor = 'default'
 }
 
+watch(
+  () => props.inputLocked,
+  (locked) => {
+    scenePaused = !!locked
+  },
+)
+
 defineExpose({ closeAllDoors })
 
 onMounted(async () => {
@@ -716,7 +736,7 @@ onUnmounted(() => dispose())
 }
 
 .apt--zoomed {
-  filter: blur(4px) brightness(0.55);
+  filter: brightness(0.5);
 }
 
 .apt__canvas {
