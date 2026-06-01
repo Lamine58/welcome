@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect width="120" height="120" rx="20" fill="#1a2a3a"/>
+  <text x="60" y="58" text-anchor="middle" fill="#ffd93d" font-family="system-ui,sans-serif" font-size="16" font-weight="700">Clinic</text>
+  <text x="60" y="78" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="16" font-weight="600">du Web</text>
+</svg>

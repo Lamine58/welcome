@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect width="120" height="120" rx="20" fill="#1e2a4a"/>
+  <text x="60" y="68" text-anchor="middle" fill="#5c7cfa" font-family="system-ui,sans-serif" font-size="18" font-weight="700">MySoft</text>
+  <text x="60" y="88" text-anchor="middle" fill="#9ab0ff" font-family="system-ui,sans-serif" font-size="14" font-weight="600">-C</text>
+</svg>

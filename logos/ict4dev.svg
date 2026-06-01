@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <rect width="120" height="120" rx="20" fill="#1a3d28"/>
+  <circle cx="60" cy="48" r="18" fill="#f59e0b"/>
+  <path d="M60 72 Q40 90 60 95 Q80 90 60 72" fill="#22c55e"/>
+  <text x="60" y="112" text-anchor="middle" fill="#86efac" font-family="system-ui,sans-serif" font-size="11" font-weight="700">ICT4DEV</text>
+</svg>
