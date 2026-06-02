@@ -6,7 +6,8 @@
       :scene-ready="sceneReady"
     />
 
-    <ApartmentScene
+    <component
+      :is="sceneComponent"
       ref="sceneRef"
       :doors="doors"
       :input-locked="!!activeDoor"
@@ -28,7 +29,7 @@
           <span>{{ profile.role }} · {{ profile.headline }}</span>
         </div>
       </div>
-      <p v-if="sceneReady && !activeDoor" class="hud__hint">
+      <p v-if="sceneReady && !activeDoor && !isMobileUniverse" class="hud__hint">
         <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> se déplacer · Clic porte · <kbd>Échap</kbd> fermer
       </p>
     </header>
@@ -48,6 +49,7 @@
 
 <script setup lang="ts">
 import ApartmentScene from '~/components/ApartmentScene.client.vue'
+import MobileSwipeScene from '~/components/MobileSwipeScene.client.vue'
 import DoorInfoPanel from '~/components/ui/DoorInfoPanel.vue'
 import PlaqueEntranceLoader from '~/components/ui/PlaqueEntranceLoader.vue'
 
@@ -58,6 +60,19 @@ const { profile, projects, mobileProjects, skills, experiences, doors } = usePor
 const sceneReady = ref(false)
 const activeDoor = ref<string | null>(null)
 const sceneRef = ref<{ closeAllDoors: (cb?: () => void) => void } | null>(null)
+const isMobileUniverse = ref(false)
+
+const sceneComponent = computed(() => (
+  isMobileUniverse.value ? MobileSwipeScene : ApartmentScene
+))
+
+function syncSceneMode() {
+  const next = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches
+  if (next === isMobileUniverse.value) return
+  isMobileUniverse.value = next
+  sceneReady.value = false
+  activeDoor.value = null
+}
 
 function onDoorOpen(id: string) {
   activeDoor.value = id
@@ -76,10 +91,13 @@ function onGlobalKeydown(e: KeyboardEvent) {
 }
 
 onMounted(() => {
+  syncSceneMode()
+  window.addEventListener('resize', syncSceneMode)
   window.addEventListener('keydown', onGlobalKeydown)
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', syncSceneMode)
   window.removeEventListener('keydown', onGlobalKeydown)
 })
 </script>
@@ -170,13 +188,37 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
   .hud {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 1rem;
+    display: flex;
+    justify-content: center;
+    padding: 0.6rem 0.7rem;
+    top: 0.2rem;
+    left: 0.2rem;
+    right: 0.2rem;
+    transform: none;
+    opacity: 1;
+    pointer-events: none;
   }
-  .hud__hint {
-    font-size: 0.68rem;
+
+  .hud__brand {
+    padding: 0.45rem 0.7rem;
+    gap: 0.55rem;
+    border-radius: 8px;
   }
+
+  .hud__avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .hud__brand strong {
+    font-size: 0.82rem;
+    line-height: 1.15;
+  }
+
+  .hud__brand span {
+    font-size: 0.64rem;
+  }
+
+  .hud__hint { display: none; }
 }
 </style>

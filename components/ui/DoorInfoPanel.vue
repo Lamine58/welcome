@@ -12,7 +12,8 @@
               <button type="button" class="panel__close" aria-label="Fermer" @click="emit('close')">
                 <i class="bi bi-x-lg" />
               </button>
-              <header class="panel__head">
+              <div class="panel__content">
+                <header class="panel__head">
             <div class="panel__icon-wrap">
               <i v-if="doorMeta" :class="`bi bi-${doorMeta.icon}`" />
             </div>
@@ -193,6 +194,7 @@
               </div>
             </a>
           </div>
+              </div>
             </article>
           </div>
         </div>
@@ -260,7 +262,7 @@ const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
   position: relative;
   width: 100%;
   max-height: min(88vh, 820px);
-  overflow-y: auto;
+  overflow: hidden;
   padding: 2rem 2.25rem 2.1rem;
   border-radius: 6px;
   background: linear-gradient(165deg, #faf8f4 0%, #ebe6dc 45%, #ddd6ca 100%);
@@ -272,21 +274,9 @@ const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
     0 22px 50px rgba(0, 0, 0, 0.5),
     0 5px 0 #b8aea0,
     0 32px 60px rgba(0, 0, 0, 0.28);
-}
-
-.panel::before {
-  content: '';
-  position: absolute;
-  inset: 8px;
-  border: 1px solid rgba(139, 109, 75, 0.22);
-  border-radius: 3px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.panel > *:not(.panel__screw) {
-  position: relative;
-  z-index: 1;
+  --frame-top: 2rem;
+  --frame-side: 2.25rem;
+  --frame-bottom: 2.1rem;
 }
 
 .panel__screw {
@@ -299,17 +289,44 @@ const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
   z-index: 2;
 }
 
-.panel__screw--tl { top: 12px; left: 14px; }
-.panel__screw--tr { top: 12px; right: 14px; }
-.panel__screw--bl { bottom: 12px; left: 14px; }
-.panel__screw--br { bottom: 12px; right: 14px; }
+.panel__screw--tl {
+  top: calc(var(--frame-top) + 4px);
+  left: calc(var(--frame-side) + 4px);
+}
+
+.panel__screw--tr {
+  top: calc(var(--frame-top) + 4px);
+  right: calc(var(--frame-side) + 4px);
+}
+
+.panel__screw--bl {
+  top: auto;
+  bottom: calc(var(--frame-bottom) + 4px);
+  left: calc(var(--frame-side) + 4px);
+}
+
+.panel__screw--br {
+  top: auto;
+  bottom: calc(var(--frame-bottom) + 4px);
+  right: calc(var(--frame-side) + 4px);
+}
+
+.panel__content {
+  position: relative;
+  z-index: 1;
+  max-height: calc(min(88vh, 820px) - var(--frame-top) - var(--frame-bottom));
+  overflow-y: auto;
+  border: 1px solid rgba(139, 109, 75, 0.22);
+  border-radius: 3px;
+  padding: 1rem 1rem 1.1rem;
+}
 
 .panel__close {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  width: 36px;
-  height: 36px;
+  top: 0.7rem;
+  right: 0.2rem;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -332,6 +349,7 @@ const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
   align-items: flex-start;
   margin-bottom: 1.25rem;
   padding-bottom: 1rem;
+  padding-right: 3rem;
   border-bottom: 1px solid rgba(107, 90, 72, 0.2);
 }
 
@@ -376,6 +394,121 @@ const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
 @media (max-width: 720px) {
   .panel__body--grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .overlay {
+    padding: 0.2rem;
+  }
+
+  .panel-stage,
+  .panel-3d {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .panel {
+    width: 100%;
+    max-height: 94vh;
+    border-width: 2px;
+    border-radius: 10px;
+    padding: 0.55rem;
+    --frame-top: 0.75rem;
+    --frame-side: 0.55rem;
+    --frame-bottom: 0.75rem;
+  }
+
+  .panel__content {
+    max-height: calc(94vh - var(--frame-top) - var(--frame-bottom));
+    padding: 0.75rem 0.75rem 0.9rem;
+    border-radius: 8px;
+  }
+
+  .panel__close {
+    top: 1.45rem;
+    right: 1.4rem;
+    width: 32px;
+    height: 32px;
+  }
+
+  .panel__head {
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.7rem;
+    padding-right: 2.35rem;
+  }
+
+  .panel__icon-wrap {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+
+  .panel__title {
+    font-size: 1.95rem;
+    line-height: 1.14;
+  }
+
+  .panel__body {
+    font-size: 0.95rem;
+    line-height: 1.62;
+  }
+
+  .about-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+  }
+
+  .about-photo {
+    width: 74px;
+    height: 74px;
+  }
+
+  .list--grid .list-item,
+  .timeline__row {
+    padding: 0.75rem;
+  }
+
+  .list--grid .list-item--mobile {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 0.7rem 0.95rem;
+    align-items: start;
+  }
+
+  .list--grid .list-item--mobile .list-item__content {
+    padding-top: 0.1rem;
+    padding-left: 8px;
+  }
+
+  .timeline__row {
+    gap: 0.95rem;
+  }
+
+  .list-item p,
+  .timeline p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .list-item__tags span {
+    font-size: 0.7rem;
+  }
+
+  .mobile-stores {
+    margin-top: 0.5rem;
+    gap: 0.45rem;
+  }
+
+  .mobile-stores__btn {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.62rem;
+  }
+
+  .contact-row {
+    padding: 0.72rem 0.8rem;
   }
 }
 
