@@ -410,7 +410,7 @@ const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
 
   .panel {
     width: 100%;
-    max-height: 94vh;
+    max-height: 86vh;
     border-width: 2px;
     border-radius: 10px;
     padding: 0.55rem;
@@ -420,7 +420,7 @@ const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
   }
 
   .panel__content {
-    max-height: calc(94vh - var(--frame-top) - var(--frame-bottom));
+    max-height: calc(86vh - var(--frame-top) - var(--frame-bottom));
     padding: 0.75rem 0.75rem 0.9rem;
     border-radius: 8px;
   }
