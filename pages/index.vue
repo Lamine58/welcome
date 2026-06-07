@@ -30,7 +30,7 @@
         </div>
       </div>
       <p v-if="sceneReady && !activeDoor && !isMobileUniverse" class="hud__hint">
-        <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> se déplacer · Clic porte · <kbd>Échap</kbd> fermer
+        <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> se déplacer · Portes & objets cliquables · <kbd>Échap</kbd> fermer
       </p>
     </header>
 
@@ -38,10 +38,12 @@
       :door-id="activeDoor"
       :doors="doors"
       :profile="profile"
+      :profile-quote="profileQuote"
       :projects="projects"
       :mobile-projects="mobileProjects"
       :skills="skills"
       :experiences="experiences"
+      :board-tasks="boardTasks"
       @close="closePanel"
     />
   </div>
@@ -55,7 +57,7 @@ import PlaqueEntranceLoader from '~/components/ui/PlaqueEntranceLoader.vue'
 
 definePageMeta({ ssr: false })
 
-const { profile, projects, mobileProjects, skills, experiences, doors } = usePortfolioData()
+const { profile, projects, mobileProjects, skills, experiences, doors, boardTasks, profileQuote } = usePortfolioData()
 
 const sceneReady = ref(false)
 const activeDoor = ref<string | null>(null)

@@ -83,6 +83,25 @@ export interface ApartmentDoor {
   color: string
 }
 
+export interface BoardTask {
+  text: string
+  color: string
+  done?: boolean
+  x: number
+  y: number
+  w: number
+  h: number
+  rot?: number
+}
+
+export interface ApartmentHotspot {
+  id: string
+  panelId: string
+  label: string
+  icon: string
+  hint: string
+}
+
 export function usePortfolioData() {
   const profile = {
     name: 'Lamine Ishola',
@@ -432,5 +451,29 @@ export function usePortfolioData() {
     { id: 'contact', label: 'Contact', icon: 'envelope', wall: 'south', color: '#6a9fd4' },
   ]
 
-  return { profile, projects, mobileProjects, skills, experiences, education, doors }
+  const boardTasks: BoardTask[] = [
+    { text: 'APIs Laravel / NestJS', color: '#fff9a8', done: true, x: 108, y: 14, w: 148, h: 88, rot: -0.04 },
+    { text: 'Apps Flutter · Play Store', color: '#ffd4a8', done: true, x: 278, y: 28, w: 152, h: 86, rot: 0.05 },
+    { text: 'Passerelle paiement', color: '#a8e6cf', done: false, x: 452, y: 18, w: 138, h: 92, rot: -0.07 },
+    { text: 'Portfolio 3D interactif', color: '#ffc8dd', done: false, x: 92, y: 118, w: 158, h: 96, rot: 0.04 },
+    { text: 'Traçabilité QR', color: '#bde0fe', done: true, x: 278, y: 132, w: 146, h: 94, rot: -0.03 },
+    { text: 'Support marchands', color: '#e2f0cb', done: false, x: 448, y: 128, w: 142, h: 98, rot: 0.06 },
+    { text: 'Mobile Money CI', color: '#f9dcc4', done: true, x: 168, y: 248, w: 154, h: 90, rot: -0.05 },
+    { text: 'Audit & perf API', color: '#d4c4fb', done: false, x: 352, y: 258, w: 148, h: 88, rot: 0.04 },
+  ]
+
+  const hotspots: ApartmentHotspot[] = [
+    { id: 'tv', panelId: 'projects', label: 'Télé — Himra', icon: 'tv', hint: 'Cliquer pour lire / pause' },
+    { id: 'monitor', panelId: 'projects', label: 'Écran — Projets', icon: 'display', hint: 'Projets en cours' },
+    { id: 'books', panelId: 'skills', label: 'Bibliothèque', icon: 'book', hint: 'Stack technique' },
+    { id: 'clock', panelId: 'clock', label: 'Horloge', icon: 'clock', hint: 'Heure & disponibilité' },
+    { id: 'table', panelId: 'links', label: 'Table basse', icon: 'link-45deg', hint: 'Liens utiles' },
+    { id: 'trophy', panelId: 'stats', label: 'Trophées', icon: 'trophy', hint: 'Chiffres clés' },
+    { id: 'window', panelId: 'tasks', label: 'Tableau — Tâches', icon: 'kanban', hint: 'Mes priorités' },
+  ]
+
+  const profileQuote =
+    '« Construire des systèmes fiables — paiement, traçabilité, mobile — avec la même exigence du backend au pixel. »'
+
+  return { profile, projects, mobileProjects, skills, experiences, education, doors, hotspots, boardTasks, profileQuote }
 }

@@ -1,10 +1,10 @@
 <template>
   <div class="apt" :class="{ 'apt--zoomed': isZoomed }">
     <canvas ref="canvasRef" class="apt__canvas" />
-    <div v-if="hoveredDoor && !isZoomed" class="apt__tooltip" :style="tooltipStyle">
-      <i :class="iconClass(hoveredDoor.icon)" />
-      <span>{{ hoveredDoor.label }}</span>
-      <small>Cliquer pour ouvrir</small>
+    <div v-if="hoveredInteractive && !isZoomed" class="apt__tooltip" :style="tooltipStyle">
+      <i :class="iconClass(hoveredInteractive.icon)" />
+      <span>{{ hoveredInteractive.label }}</span>
+      <small>{{ hoveredInteractive.hint }}</small>
     </div>
   </div>
 </template>
@@ -13,7 +13,15 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { ApartmentDoor } from '~/composables/usePortfolioData'
-import { buildDetailedFurniture, buildWallPhotoFrame, buildWindow } from '~/utils/apartmentFurniture'
+import {
+  applyWindowTaskBoard,
+  buildDetailedFurniture,
+  buildWallClock,
+  buildWallPhotoFrame,
+  buildWindow,
+} from '~/utils/apartmentFurniture'
+import { setupTvVideo, type TvVideoHandle } from '~/utils/apartmentTvVideo'
+import { applyMonitorWallpaper } from '~/utils/apartmentMonitor'
 import { publicAsset } from '~/utils/publicAsset'
 import { configureTexture, disposeObject3D } from '~/utils/threeDispose'
 
@@ -21,6 +29,8 @@ const props = defineProps<{
   doors: ApartmentDoor[]
   inputLocked?: boolean
 }>()
+
+const { boardTasks } = usePortfolioData()
 
 const emit = defineEmits<{
   doorOpen: [id: string]
@@ -31,12 +41,15 @@ const emit = defineEmits<{
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const ready = ref(false)
 const isZoomed = ref(false)
-const hoveredDoor = ref<ApartmentDoor | null>(null)
+const hoveredInteractive = ref<{ label: string; icon: string; hint: string } | null>(null)
 const tooltipStyle = ref({ left: '50%', top: '50%' })
 
 const ROOM = { w: 14, d: 12, h: 3.2 }
 const doorGroups: THREE.Group[] = []
+const hotspotMeshes: THREE.Object3D[] = []
 let openDoorId: string | null = null
+let lastHoveredHotspotId: string | null = null
+let tvVideo: TvVideoHandle | null = null
 
 let renderer: THREE.WebGLRenderer | null = null
 let scene: THREE.Scene
@@ -173,7 +186,7 @@ function createRoom() {
     new THREE.MeshStandardMaterial({ color: 0x6b3a2a, roughness: 1 }),
   )
   rug.rotation.x = -Math.PI / 2
-  rug.position.set(-1, 0.015, 2.3)
+  rug.position.set(-2.2, 0.015, 2.2)
   scene.add(rug)
 
   const wallMat = new THREE.MeshStandardMaterial({
@@ -245,8 +258,8 @@ function createDoor(door: ApartmentDoor, x: number, y: number, z: number, rotY: 
   const hinge = new THREE.Group()
   hinge.position.set(-0.52, 0, 0.07)
 
-  const panel = new THREE.Mesh(new THREE.BoxGeometry(1.02, 2.05, 0.09), doorMat)
-  panel.position.set(0.51, 0, 0)
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(1.02, 1.95, 0.09), doorMat)
+  panel.position.set(0.51, 0.04, 0)
   panel.castShadow = !perfLite
   hinge.add(panel)
 
@@ -355,6 +368,34 @@ function applyCameraView(pos: THREE.Vector3, target: THREE.Vector3) {
   camera.lookAt(target)
 }
 
+function findHotspotObject(obj: THREE.Object3D | null): THREE.Object3D | null {
+  let cur: THREE.Object3D | null = obj
+  while (cur) {
+    if (cur.userData?.isHotspot) return cur
+    cur = cur.parent
+  }
+  return null
+}
+
+function setHotspotHighlight(hotspotId: string | null) {
+  if (hotspotId === lastHoveredHotspotId) return
+  lastHoveredHotspotId = hotspotId
+  hotspotMeshes.forEach((obj) => {
+    if (!(obj instanceof THREE.Mesh)) return
+    const mat = obj.material as THREE.MeshStandardMaterial
+    if (!mat.emissive) return
+    const id = obj.userData.hotspotId as string
+    mat.emissiveIntensity = id === hotspotId ? 1.2 : (mat.map ? 0.55 : 0.4)
+    if (id === hotspotId && !mat.map) mat.emissive.setHex(0x443322)
+    else if (id !== hotspotId && !mat.map) mat.emissive.setHex(obj.userData.baseEmissive ?? 0x112233)
+  })
+}
+
+function openHotspot(panelId: string) {
+  if (zoomState !== 'idle' || isZoomed.value) return
+  emit('doorOpen', panelId)
+}
+
 function findDoorGroup(obj: THREE.Object3D | null): THREE.Group | null {
   let cur: THREE.Object3D | null = obj
   while (cur) {
@@ -399,7 +440,7 @@ function startZoomIn(id: string) {
   zoomState = 'in'
   isZoomed.value = true
   controls.enabled = false
-  hoveredDoor.value = null
+  hoveredInteractive.value = null
   setDoorTarget(id)
 }
 
@@ -493,22 +534,48 @@ function setDoorHighlight(doorId: string | null) {
   })
 }
 
-function updateDoorHover() {
+function updateInteractiveHover() {
   if (!raycaster || !camera || isZoomed.value || scenePaused) return
   raycaster.setFromCamera(pointer, camera)
-  const hits = raycaster.intersectObjects(doorGroups, true)
-  const group = hits.length ? findDoorGroup(hits[0]!.object) : null
-  const doorId = group ? (group.userData.doorId as string) : null
 
-  if (doorId) {
-    hoveredDoor.value = props.doors.find((d) => d.id === doorId) ?? null
+  const doorHits = raycaster.intersectObjects(doorGroups, true)
+  const doorGroup = doorHits.length ? findDoorGroup(doorHits[0]!.object) : null
+  if (doorGroup) {
+    const doorId = doorGroup.userData.doorId as string
+    const door = props.doors.find((d) => d.id === doorId)
+    hoveredInteractive.value = door
+      ? { label: door.label, icon: door.icon, hint: 'Cliquer pour ouvrir' }
+      : null
     document.body.style.cursor = 'pointer'
     setDoorHighlight(doorId)
-  } else {
-    hoveredDoor.value = null
-    document.body.style.cursor = 'default'
-    setDoorHighlight(null)
+    setHotspotHighlight(null)
+    return
   }
+
+  const hotspotHits = raycaster.intersectObjects(hotspotMeshes, true)
+  const hotspot = hotspotHits.length ? findHotspotObject(hotspotHits[0]!.object) : null
+  if (hotspot) {
+    const hotspotId = hotspot.userData.hotspotId as string
+    hoveredInteractive.value = {
+      label: hotspot.userData.label as string,
+      icon: hotspot.userData.icon as string,
+      hint:
+        hotspotId === 'tv'
+          ? tvVideo?.isPlaying()
+            ? 'Cliquer pour mettre en pause'
+            : 'Cliquer pour lire la vidéo'
+          : 'Cliquer pour explorer',
+    }
+    document.body.style.cursor = 'pointer'
+    setDoorHighlight(null)
+    setHotspotHighlight(hotspot.userData.hotspotId as string)
+    return
+  }
+
+  hoveredInteractive.value = null
+  document.body.style.cursor = 'default'
+  setDoorHighlight(null)
+  setHotspotHighlight(null)
 }
 
 function updateKeyboardMove() {
@@ -551,9 +618,23 @@ function onKeyUp(e: KeyboardEvent) {
 function onClick() {
   if (isZoomed.value || zoomState !== 'idle') return
   raycaster.setFromCamera(pointer, camera)
-  const hits = raycaster.intersectObjects(doorGroups, true)
-  const group = hits.length ? findDoorGroup(hits[0]!.object) : null
-  if (group?.userData.doorId) openDoor(group.userData.doorId as string)
+
+  const doorHits = raycaster.intersectObjects(doorGroups, true)
+  const doorGroup = doorHits.length ? findDoorGroup(doorHits[0]!.object) : null
+  if (doorGroup?.userData.doorId) {
+    openDoor(doorGroup.userData.doorId as string)
+    return
+  }
+
+  const hotspotHits = raycaster.intersectObjects(hotspotMeshes, true)
+  const hotspot = hotspotHits.length ? findHotspotObject(hotspotHits[0]!.object) : null
+  if (hotspot?.userData.hotspotId === 'tv' && tvVideo) {
+    tvVideo.togglePlayPause().catch(() => {})
+    return
+  }
+  if (hotspot?.userData.panelId) {
+    openHotspot(hotspot.userData.panelId as string)
+  }
 }
 
 function resize() {
@@ -573,8 +654,10 @@ function animate() {
 
   if (needsHoverCheck) {
     needsHoverCheck = false
-    updateDoorHover()
+    updateInteractiveHover()
   }
+
+  tvVideo?.update()
 
   doorGroups.forEach((g) => {
     const hinge = g.userData.hinge as THREE.Group
@@ -641,26 +724,55 @@ function init() {
   raycaster = new THREE.Raycaster()
 
   createRoom()
-  buildDetailedFurniture(scene, perfLite)
-  buildWindow(scene, ROOM)
-  placeDoors()
   createLights()
+
+  const furniture = buildDetailedFurniture(scene, perfLite)
+  hotspotMeshes.push(...furniture.hotspotMeshes)
+  const windowGroup = buildWindow(scene, ROOM, hotspotMeshes)
+  placeDoors()
+
+  if (furniture.tvScreen) {
+    tvVideo = setupTvVideo(furniture.tvScreen, publicAsset('himra.mp4'), renderer ?? undefined, perfLite)
+  }
+
+  hotspotMeshes.forEach((obj) => {
+    if (obj instanceof THREE.Mesh) {
+      const mat = obj.material as THREE.MeshStandardMaterial
+      if (mat.emissive) obj.userData.baseEmissive = mat.emissive.getHex()
+    }
+  })
 
   const texLoader = new THREE.TextureLoader()
   Promise.all([
     texLoader.loadAsync(publicAsset('cadre.jpeg')),
     texLoader.loadAsync(publicAsset('avatar.jpg')),
+    texLoader.loadAsync(publicAsset('horloge.jpg')),
+    texLoader.loadAsync(publicAsset('ordinateur.png')),
   ])
-    .then(([frameTex, photoTex]) => {
+    .then(([frameTex, photoTex, clockTex, monitorTex]) => {
       if (disposed) {
         frameTex.dispose()
         photoTex.dispose()
+        clockTex.dispose()
+        monitorTex.dispose()
         return
       }
       configureTexture(frameTex, renderer, { lite: perfLite })
       configureTexture(photoTex, renderer, { lite: perfLite })
-      loadedTextures.push(frameTex, photoTex)
+      configureTexture(clockTex, renderer, { lite: perfLite })
+      configureTexture(monitorTex, renderer, { lite: perfLite })
+      loadedTextures.push(frameTex, photoTex, clockTex, monitorTex)
       scene.add(buildWallPhotoFrame(frameTex, photoTex, ROOM, perfLite))
+      applyWindowTaskBoard(windowGroup, photoTex, boardTasks, loadedTextures)
+      scene.add(buildWallClock(clockTex, hotspotMeshes, perfLite))
+      if (furniture.monitorScreen) {
+        applyMonitorWallpaper(furniture.monitorScreen, monitorTex, perfLite)
+      }
+      hotspotMeshes.forEach((obj) => {
+        if (!(obj instanceof THREE.Mesh)) return
+        const mat = obj.material as THREE.MeshStandardMaterial
+        if (mat.emissive) obj.userData.baseEmissive = mat.emissive.getHex()
+      })
     })
     .catch(() => {
       /* textures optionnelles — la scène reste utilisable */
@@ -680,6 +792,9 @@ function init() {
 
 function onVisibilityChange() {
   isPageVisible = document.visibilityState === 'visible'
+  if (!isPageVisible && tvVideo?.isPlaying()) {
+    tvVideo.togglePlayPause().catch(() => {})
+  }
   if (isPageVisible && !disposed && renderer) {
     animate()
   } else {
@@ -703,6 +818,8 @@ function dispose() {
   if (scene) disposeObject3D(scene)
   loadedTextures.forEach((t) => t.dispose())
   loadedTextures.length = 0
+  tvVideo?.dispose()
+  tvVideo = null
   renderer?.dispose()
   renderer?.forceContextLoss()
   renderer = null

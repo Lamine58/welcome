@@ -136,6 +136,112 @@
             </ul>
           </div>
 
+          <div v-else-if="doorId === 'clock'" class="panel__body panel__body--clock">
+            <div class="clock-display">
+              <p class="clock-time">{{ abidjanTime }}</p>
+              <p class="muted">Abidjan · GMT{{ abidjanOffset }}</p>
+            </div>
+            <div class="availability" :class="availabilityClass">
+              <i :class="availabilityIcon" />
+              <div>
+                <strong>{{ availabilityLabel }}</strong>
+                <p class="muted">{{ availabilityHint }}</p>
+              </div>
+            </div>
+            <p class="text">{{ profileQuote }}</p>
+          </div>
+
+          <div v-else-if="doorId === 'links'" class="panel__body panel__body--grid contact-grid">
+            <a :href="profile.github" target="_blank" rel="noopener" class="contact-row">
+              <i class="bi bi-github" />
+              <div>
+                <span class="contact-label">GitHub</span>
+                <span class="contact-value">@lamine58 — code & projets</span>
+              </div>
+            </a>
+            <a :href="profile.portfolioMac" target="_blank" rel="noopener" class="contact-row">
+              <i class="bi bi-laptop" />
+              <div>
+                <span class="contact-label">Portfolio macOS</span>
+                <span class="contact-value">Autre expérience CV</span>
+              </div>
+            </a>
+            <a :href="profile.linkedin" target="_blank" rel="noopener" class="contact-row">
+              <i class="bi bi-linkedin" />
+              <div>
+                <span class="contact-label">LinkedIn</span>
+                <span class="contact-value">Profil professionnel</span>
+              </div>
+            </a>
+            <a :href="`mailto:${profile.email}`" class="contact-row">
+              <i class="bi bi-envelope" />
+              <div>
+                <span class="contact-label">Email</span>
+                <span class="contact-value">{{ profile.email }}</span>
+              </div>
+            </a>
+          </div>
+
+          <div v-else-if="doorId === 'stats'" class="panel__body panel__body--about">
+            <div class="stats stats--wide">
+              <div><strong>7+</strong><span>Apps Play Store</span></div>
+              <div><strong>15+</strong><span>Sites livrés</span></div>
+              <div><strong>6+</strong><span>Ans d'expérience</span></div>
+              <div><strong>10</strong><span>Apps mobile listées</span></div>
+              <div><strong>8</strong><span>Projets web majeurs</span></div>
+              <div><strong>2</strong><span>Diplômes HETEC</span></div>
+            </div>
+            <p class="text">{{ profileQuote }}</p>
+          </div>
+
+          <div v-else-if="doorId === 'location'" class="panel__body panel__body--location">
+            <div class="location-hero">
+              <i class="bi bi-geo-alt-fill" />
+              <div>
+                <p class="lead">{{ profile.location }}</p>
+                <p class="muted">Fuseau : GMT{{ abidjanOffset }} · {{ abidjanTime }}</p>
+              </div>
+            </div>
+            <p class="text">
+              Basé à Abidjan, je collabore avec des équipes en Côte d'Ivoire et à l'international
+              sur des produits web & mobile à fort impact — paiement, traçabilité, santé, solidarité.
+            </p>
+            <div class="location-tags">
+              <span>Abidjan</span>
+              <span>Côte d'Ivoire</span>
+              <span>Remote friendly</span>
+            </div>
+          </div>
+
+          <div v-else-if="doorId === 'tasks'" class="panel__body panel__body--tasks">
+            <div class="task-board-head">
+              <img
+                :src="profile.avatar"
+                :alt="profile.name"
+                class="task-board-head__photo"
+                width="56"
+                height="56"
+              >
+              <div>
+                <p class="lead">{{ profile.name }}</p>
+                <p class="muted">Priorités en cours · Fintech & mobile</p>
+              </div>
+            </div>
+            <ul class="task-list">
+              <li
+                v-for="task in boardTasks"
+                :key="task.text"
+                class="task-item"
+                :class="{ 'task-item--done': task.done }"
+              >
+                <span class="task-item__note" :style="{ background: task.color }">
+                  <i :class="task.done ? 'bi bi-check-square-fill' : 'bi bi-square'" />
+                  <span>{{ task.text }}</span>
+                </span>
+              </li>
+            </ul>
+          </div>
+
           <div v-else-if="doorId === 'contact'" class="panel__body panel__body--grid contact-grid">
             <a :href="`mailto:${profile.email}`" class="contact-row">
               <i class="bi bi-envelope" />
@@ -205,21 +311,37 @@
 
 <script setup lang="ts">
 import BrandLogo from '~/components/ui/BrandLogo.vue'
-import type { ApartmentDoor } from '~/composables/usePortfolioData'
+import type { ApartmentDoor, BoardTask } from '~/composables/usePortfolioData'
 
 const props = defineProps<{
   doorId: string | null
   doors: ApartmentDoor[]
   profile: ReturnType<typeof usePortfolioData>['profile']
+  profileQuote: string
   projects: ReturnType<typeof usePortfolioData>['projects']
   mobileProjects: ReturnType<typeof usePortfolioData>['mobileProjects']
   skills: ReturnType<typeof usePortfolioData>['skills']
   experiences: ReturnType<typeof usePortfolioData>['experiences']
+  boardTasks: BoardTask[]
 }>()
 
 const emit = defineEmits<{ close: [] }>()
 
-const doorMeta = computed(() => props.doors.find((d) => d.id === props.doorId))
+const doorMeta = computed(() => {
+  if (!props.doorId) return undefined
+  const fromDoor = props.doors.find((d) => d.id === props.doorId)
+  if (fromDoor) return fromDoor
+  const hotspotMeta: Record<string, { label: string; icon: string }> = {
+    clock: { label: 'Horloge', icon: 'clock' },
+    links: { label: 'Liens', icon: 'link-45deg' },
+    stats: { label: 'Stats', icon: 'trophy' },
+    location: { label: 'Localisation', icon: 'geo-alt' },
+    tasks: { label: 'Tableau — Tâches', icon: 'kanban' },
+    window: { label: 'Tableau — Tâches', icon: 'kanban' },
+  }
+  const meta = hotspotMeta[props.doorId]
+  return meta ? { id: props.doorId, ...meta, wall: 'north' as const, color: '#c4a574' } : undefined
+})
 
 const titles: Record<string, string> = {
   about: 'Salon — Présentation',
@@ -228,7 +350,70 @@ const titles: Record<string, string> = {
   skills: 'Atelier — Stack technique',
   experience: 'Couloir — Parcours pro',
   contact: 'Entrée — Me contacter',
+  clock: 'Horloge — Disponibilité',
+  links: 'Salon — Liens utiles',
+  stats: 'Buffet — Chiffres clés',
+  tasks: 'Entrée — Tableau de tâches',
+  location: 'Fenêtre — Abidjan',
 }
+
+const abidjanTime = ref('')
+const abidjanOffset = ref('+0')
+
+function refreshAbidjanClock() {
+  const fmt = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Africa/Abidjan',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
+  abidjanTime.value = fmt.format(new Date())
+  abidjanOffset.value = '+0'
+}
+
+let clockTimer: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  refreshAbidjanClock()
+  clockTimer = setInterval(refreshAbidjanClock, 1000)
+})
+
+onUnmounted(() => {
+  if (clockTimer) clearInterval(clockTimer)
+})
+
+const abidjanHour = computed(() => {
+  const h = Number.parseInt(abidjanTime.value.split(':')[0] ?? '12', 10)
+  return Number.isNaN(h) ? 12 : h
+})
+
+const availabilityClass = computed(() => {
+  const h = abidjanHour.value
+  if (h >= 9 && h < 18) return 'availability--open'
+  if (h >= 18 && h < 21) return 'availability--soft'
+  return 'availability--away'
+})
+
+const availabilityLabel = computed(() => {
+  const h = abidjanHour.value
+  if (h >= 9 && h < 18) return 'Disponible pour échanger'
+  if (h >= 18 && h < 21) return 'Disponibilité limitée'
+  return 'Hors plage habituelle'
+})
+
+const availabilityHint = computed(() => {
+  const h = abidjanHour.value
+  if (h >= 9 && h < 18) return 'Réponse rapide en journée (Abidjan).'
+  if (h >= 18 && h < 21) return 'Je peux répondre selon urgence.'
+  return 'Laissez un message — je reviens vers vous.'
+})
+
+const availabilityIcon = computed(() => {
+  const h = abidjanHour.value
+  if (h >= 9 && h < 18) return 'bi bi-circle-fill'
+  if (h >= 18 && h < 21) return 'bi bi-circle-half'
+  return 'bi bi-moon-stars'
+})
 
 const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
 </script>
@@ -570,6 +755,169 @@ const title = computed(() => (props.doorId ? titles[props.doorId] ?? '' : ''))
 }
 
 .stats span { font-size: 0.75rem; color: #6b5a48; }
+
+.stats--wide {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .stats--wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.panel__body--clock {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.clock-display {
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(107, 90, 72, 0.15);
+}
+
+.clock-time {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #8b6d4b;
+  font-family: var(--mono, monospace);
+}
+
+.availability {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(107, 90, 72, 0.15);
+}
+
+.availability i {
+  font-size: 0.85rem;
+  margin-top: 0.2rem;
+}
+
+.availability--open {
+  background: rgba(45, 106, 50, 0.12);
+}
+
+.availability--open i { color: #2d6a32; }
+
+.availability--soft {
+  background: rgba(252, 182, 69, 0.18);
+}
+
+.availability--soft i { color: #c47f1a; }
+
+.availability--away {
+  background: rgba(107, 90, 72, 0.1);
+}
+
+.availability--away i { color: #6b5a48; }
+
+.panel__body--location {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.location-hero {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: rgba(106, 159, 212, 0.15);
+  border: 1px solid rgba(106, 159, 212, 0.25);
+}
+
+.location-hero i {
+  font-size: 1.75rem;
+  color: #6a9fd4;
+}
+
+.location-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.location-tags span {
+  padding: 0.3rem 0.65rem;
+  background: rgba(139, 109, 75, 0.12);
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.panel__body--tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.task-board-head {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  background: rgba(184, 149, 106, 0.2);
+  border: 1px solid rgba(107, 90, 72, 0.15);
+}
+
+.task-board-head__photo {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.task-item__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  transform: rotate(-0.4deg);
+}
+
+.task-item:nth-child(even) .task-item__note {
+  transform: rotate(0.35deg);
+}
+
+.task-item__note i {
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+  color: #2a2418;
+}
+
+.task-item--done .task-item__note {
+  opacity: 0.82;
+}
+
+.task-item--done .task-item__note span {
+  text-decoration: line-through;
+  text-decoration-color: rgba(42, 36, 24, 0.45);
+}
 
 .edu-block,
 .lang-block {
