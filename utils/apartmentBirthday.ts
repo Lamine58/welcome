@@ -134,7 +134,41 @@ function buildCake(parent: THREE.Object3D, y: number) {
   })
 }
 
-function buildBalloon(parent: THREE.Object3D, x: number, y: number, z: number, color: number) {
+function addString(
+  parent: THREE.Object3D,
+  x0: number,
+  y0: number,
+  z0: number,
+  x1: number,
+  y1: number,
+  z1: number,
+) {
+  const dx = x1 - x0
+  const dy = y1 - y0
+  const dz = z1 - z0
+  const len = Math.hypot(dx, dy, dz)
+  if (len < 0.04) return
+
+  const string = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.002, 0.002, len, 4),
+    mat(0xbbb8b0, { roughness: 1 }),
+  )
+  string.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2)
+  string.quaternion.setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    new THREE.Vector3(dx, dy, dz).normalize(),
+  )
+  parent.add(string)
+}
+
+function buildBalloon(
+  parent: THREE.Object3D,
+  x: number,
+  y: number,
+  z: number,
+  color: number,
+  anchor: THREE.Vector3,
+) {
   const g = new THREE.Group()
   g.position.set(x, y, z)
   parent.add(g)
@@ -157,33 +191,27 @@ function buildBalloon(parent: THREE.Object3D, x: number, y: number, z: number, c
   knot.position.y = -0.13
   g.add(knot)
 
-  const string = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.002, 0.002, 0.55, 4),
-    mat(0xbbb8b0, { roughness: 1 }),
-  )
-  string.position.y = -0.4
-  g.add(string)
+  addString(parent, anchor.x, anchor.y, anchor.z, x, y - 0.13, z)
 }
 
-function buildBalloonBouquet(parent: THREE.Object3D, x: number, y: number, z: number) {
+function buildBalloonBouquet(parent: THREE.Object3D, x: number, z: number) {
   const bouquet = new THREE.Group()
-  bouquet.position.set(x, y, z)
+  bouquet.position.set(x, 0, z)
   parent.add(bouquet)
 
+  box(0.18, 0.06, 0.14, mat(0x4a3728), 0, 0.03, 0, bouquet)
+  const weight = box(0.13, 0.05, 0.1, mat(0xc9a227, { metalness: 0.55, roughness: 0.35 }), 0, 0.085, 0, bouquet)
+  weight.rotation.y = 0.2
+
+  const anchor = new THREE.Vector3(0, 0.11, 0)
   const palette = [0xe84a5f, 0xc9a227, 0xf5f0e8, 0xd4846a, 0x7eb8a4, 0x9b8ec4]
   palette.forEach((color, i) => {
-    const angle = (i / palette.length) * Math.PI * 2
-    const spread = 0.07 + (i % 2) * 0.03
-    buildBalloon(
-      bouquet,
-      Math.sin(angle) * spread,
-      0.22 + (i % 3) * 0.14,
-      Math.cos(angle) * spread - 0.05,
-      color,
-    )
+    const angle = (i / palette.length) * Math.PI * 2 + 0.3
+    const bx = Math.sin(angle) * 0.14
+    const bz = Math.cos(angle) * 0.1
+    const by = 0.95 + (i % 3) * 0.24
+    buildBalloon(bouquet, bx, by, bz, color, anchor)
   })
-
-  box(0.1, 0.06, 0.1, mat(0xc9a227, { metalness: 0.5, roughness: 0.35 }), 0, -0.03, 0.02, bouquet)
 }
 
 function buildPartyTable(parent: THREE.Object3D) {
@@ -256,7 +284,7 @@ function makeWallBannerTexture(name: string) {
 
   ctx.font = '500 18px system-ui, sans-serif'
   ctx.fillStyle = '#8b7355'
-  ctx.fillText('7 juin', 384, 128)
+  ctx.fillText('16 juin', 384, 128)
 
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
@@ -335,7 +363,7 @@ export function buildBirthdayDecor(
 
   const tableH = buildPartyTable(party)
   buildCake(party, tableH + 0.04)
-  buildBalloonBouquet(party, 0.28, tableH + 0.05, -0.12)
+  buildBalloonBouquet(party, 0.88, 0.42)
 
   buildGift(party, -0.82, 0.62, 0.28, 0.22, 0.24, 0x7eb8a4, 0xc9a227, 0.4)
   buildGift(party, 0.85, 0.58, 0.24, 0.18, 0.26, 0xd4846a, 0xfff8f0, -0.3)
@@ -356,8 +384,7 @@ export function buildBirthdayDecor(
     new THREE.PlaneGeometry(2.6, 0.54),
     new THREE.MeshBasicMaterial({ map: bannerTex, fog: false }),
   )
-  banner.position.set(0, 2.35, 5.88)
-  banner.rotation.y = Math.PI
+  banner.position.set(-0.5, 2.38, -5.97)
   party.add(banner)
 
   if (!lite) {
