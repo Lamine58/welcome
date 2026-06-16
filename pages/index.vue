@@ -32,6 +32,13 @@
       <p v-if="sceneReady && !activeDoor && !isMobileUniverse" class="hud__hint">
         <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> se déplacer · Portes & objets cliquables · <kbd>Échap</kbd> fermer
       </p>
+      <a
+        v-if="sceneReady"
+        :href="cvUrl"
+        class="hud__cv"
+        target="_blank"
+        rel="noopener noreferrer"
+      >CV PDF</a>
     </header>
 
     <DoorInfoPanel
@@ -54,10 +61,12 @@ import ApartmentScene from '~/components/ApartmentScene.client.vue'
 import MobileSwipeScene from '~/components/MobileSwipeScene.client.vue'
 import DoorInfoPanel from '~/components/ui/DoorInfoPanel.vue'
 import PlaqueEntranceLoader from '~/components/ui/PlaqueEntranceLoader.vue'
+import { publicAsset } from '~/utils/publicAsset'
 
 definePageMeta({ ssr: false })
 
 const { profile, projects, mobileProjects, skills, experiences, doors, boardTasks, profileQuote } = usePortfolioData()
+const cvUrl = publicAsset('cv.html')
 
 const sceneReady = ref(false)
 const activeDoor = ref<string | null>(null)
@@ -188,6 +197,20 @@ onUnmounted(() => {
   border-radius: 3px;
 }
 
+.hud__cv {
+  pointer-events: auto;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #2c2419;
+  background: linear-gradient(135deg, #d4b896, #c4a574);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
 @media (max-width: 640px) {
   .hud {
     display: flex;
@@ -222,5 +245,13 @@ onUnmounted(() => {
   }
 
   .hud__hint { display: none; }
+
+  .hud__cv {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.7rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.65rem;
+  }
 }
 </style>

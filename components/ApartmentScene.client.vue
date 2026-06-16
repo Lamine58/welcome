@@ -726,7 +726,7 @@ function init() {
   createRoom()
   createLights()
 
-  const furniture = buildDetailedFurniture(scene, perfLite)
+  const furniture = buildDetailedFurniture(scene, perfLite, loadedTextures)
   hotspotMeshes.push(...furniture.hotspotMeshes)
   const windowGroup = buildWindow(scene, ROOM, hotspotMeshes)
   placeDoors()

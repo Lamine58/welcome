@@ -75,6 +75,7 @@ function displayScreen(
 }
 
 import type { BoardTask } from '~/composables/usePortfolioData'
+import { buildBirthdayDecor } from '~/utils/apartmentBirthday'
 
 function wrapCanvasLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const words = text.split(' ')
@@ -237,7 +238,11 @@ function buildOfficeChair(
   })
 }
 
-export function buildDetailedFurniture(scene: THREE.Scene, lite = false): FurnitureBuildResult {
+export function buildDetailedFurniture(
+  scene: THREE.Scene,
+  lite = false,
+  loadedTextures: THREE.Texture[] = [],
+): FurnitureBuildResult {
   const root = new THREE.Group()
   scene.add(root)
 
@@ -534,6 +539,8 @@ export function buildDetailedFurniture(scene: THREE.Scene, lite = false): Furnit
   )
   mirrorGlass.position.z = 0.025
   mirror.add(mirrorGlass)
+
+  buildBirthdayDecor(root, 'Lamine', lite, loadedTextures)
 
   return { root, swayLeaves, hotspotMeshes, tvScreen, monitorScreen }
 }
