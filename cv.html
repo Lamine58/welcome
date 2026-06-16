@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV – Hasrafidine Abdel-Lamine Ishola</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:   #0D0D0D;
+    --cream: #F7F4EE;
+    --gold:  #C8A96E;
+    --slate: #2A2A2A;
+    --red:   #B03030;
+    --mid:   #5A5A5A;
+    --light: #E8E4DB;
+  }
+
+  body {
+    background: #DDDAD3;
+    font-family: 'Source Sans 3', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 40px; gap: 12px;
+  }
+
+  .print-hint {
+    background: var(--slate); color: var(--cream);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 12px; padding: 8px 20px;
+    border-left: 3px solid var(--gold); border-radius: 2px;
+    max-width: 794px; width: 100%;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    flex-wrap: wrap;
+  }
+  .print-hint-left { display: flex; align-items: center; gap: 10px; }
+  .print-hint svg { width: 14px; height: 14px; fill: var(--gold); flex-shrink: 0; }
+  .print-hint strong { color: var(--gold); }
+
+  .print-actions { display: flex; gap: 8px; }
+  .print-actions button {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 6px 14px; border: none; border-radius: 2px; cursor: pointer;
+    text-transform: uppercase;
+  }
+  .btn-print { background: var(--gold); color: var(--ink); }
+  .btn-back {
+    background: transparent; color: var(--cream);
+    border: 1px solid rgba(200,169,110,0.45);
+  }
+
+  .page {
+    width: 794px;
+    background: var(--cream);
+    box-shadow: 0 16px 60px rgba(0,0,0,0.3);
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .masthead {
+    grid-column: 1 / -1;
+    background: var(--ink);
+    padding: 22px 32px 18px;
+    display: flex; align-items: center; gap: 22px;
+    border-bottom: 2.5px solid var(--gold);
+    position: relative; overflow: hidden;
+  }
+  .masthead::before {
+    content: "LAMINE ISHOLA";
+    position: absolute; top: -14px; right: -8px;
+    font-family: 'Playfair Display', serif;
+    font-size: 88px; font-weight: 900;
+    color: rgba(255,255,255,0.04);
+    white-space: nowrap; letter-spacing: -4px;
+    pointer-events: none; user-select: none;
+  }
+
+  .photo-wrap {
+    flex-shrink: 0; width: 140px; height: 140px;
+    border: 2px solid var(--gold); overflow: hidden;
+  }
+  .photo-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover; filter: grayscale(15%); display: block;
+  }
+
+  .masthead-info { flex: 1; }
+  .masthead-tag {
+    font-size: 8.5px; letter-spacing: 3.5px;
+    color: var(--gold); font-weight: 600;
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  .masthead-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; font-weight: 700;
+    color: #fff; line-height: 1.1; margin-bottom: 7px;
+  }
+  .masthead-name em { font-style: italic; color: var(--gold); }
+  .masthead-byline {
+    font-size: 9.5px; letter-spacing: 3px;
+    color: rgba(255,255,255,0.5); text-transform: uppercase;
+  }
+  .masthead-byline span { color: var(--gold); margin: 0 5px; }
+
+  .left {
+    background: var(--slate); color: var(--cream);
+    padding: 22px 20px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+
+  .side-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 9px; letter-spacing: 2.5px;
+    text-transform: uppercase; color: var(--gold);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .side-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: rgba(200,169,110,0.3);
+  }
+
+  .profile-text {
+    font-size: 11px; line-height: 1.7;
+    color: rgba(247,244,238,0.9); font-weight: 600;
+  }
+
+  .contact-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .contact-list li {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 11px; color: rgba(247,244,238,0.8); line-height: 1.4;
+  }
+  .contact-list a { color: inherit; text-decoration: none; }
+  .c-icon {
+    width: 16px; height: 16px;
+    background: var(--red); border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .c-icon svg { width: 9px; height: 9px; fill: #fff; }
+
+  .tag-list { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag {
+    font-size: 9.5px; padding: 3px 8px;
+    border: 1px solid rgba(200,169,110,0.35);
+    color: rgba(247,244,238,0.7); border-radius: 1px;
+  }
+
+  .qual-list { display: flex; flex-direction: column; gap: 6px; }
+  .qual-item {
+    font-size: 11px; color: rgba(247,244,238,0.8);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .qual-item::before {
+    content: ''; width: 4px; height: 4px;
+    background: var(--gold); border-radius: 50%; flex-shrink: 0;
+  }
+
+  .right {
+    padding: 22px 26px;
+    display: flex; flex-direction: column; gap: 16px;
+    background: var(--cream);
+  }
+
+  .sec-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 12px;
+  }
+  .sec-head .bar { width: 3px; height: 18px; background: var(--red); flex-shrink: 0; }
+  .sec-head h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 10.5px; letter-spacing: 2.5px;
+    text-transform: uppercase; font-weight: 700; color: var(--ink);
+  }
+  .sec-head::after { content: ''; flex: 1; height: 1px; background: var(--light); }
+
+  .tl-item {
+    display: grid; grid-template-columns: 86px 1fr;
+    gap: 0 14px; padding-bottom: 12px; position: relative;
+  }
+  .tl-item::before {
+    content: ''; position: absolute;
+    left: 86px; top: 7px; bottom: 0;
+    width: 1px; background: var(--light);
+  }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-item:last-child::before { display: none; }
+
+  .tl-date {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.3px;
+    text-align: right;
+    padding-top: 1px;
+    line-height: 1.4;
+    text-transform: uppercase;
+    margin-right: 10px;
+  }
+
+  .tl-body { padding-left: 16px; position: relative; }
+  .tl-body::before {
+    content: ''; position: absolute;
+    left: -4px; top: 7px;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--gold);
+    border: 1.5px solid var(--cream);
+    box-shadow: 0 0 0 1px var(--gold);
+  }
+  .tl-company {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--mid); margin-bottom: 2px;
+  }
+  .tl-role {
+    font-family: 'Playfair Display', serif;
+    font-size: 11.5px; font-weight: 700;
+    color: var(--ink); line-height: 1.2; margin-bottom: 5px;
+  }
+  .tl-bullets { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+  .tl-bullets li {
+    font-size: 10.5px; color: var(--mid);
+    padding-left: 12px; position: relative; line-height: 1.45;
+  }
+  .tl-bullets li::before {
+    content: '•'; position: absolute; left: 0;
+    color: var(--mid);
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 8px; font-weight: 700;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    padding: 1px 5px; margin-left: 5px;
+    background: var(--light); color: var(--red);
+    vertical-align: middle;
+  }
+
+  .edu-grid { display: flex; flex-direction: column; gap: 8px; }
+  .edu-item {
+    display: grid; grid-template-columns: 66px 1fr;
+    gap: 0 12px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--light);
+  }
+  .edu-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .edu-year {
+    font-size: 9px; font-weight: 700; color: var(--red);
+    text-align: right; padding-top: 1px; line-height: 1.4;
+  }
+  .edu-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 11.5px; font-weight: 700;
+    color: var(--ink); margin-bottom: 1px; line-height: 1.25;
+  }
+  .edu-school { font-size: 10px; color: var(--mid); }
+
+  .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px; }
+  .skill-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px; color: var(--slate); line-height: 1.25;
+  }
+
+  .skills-compact {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px;
+  }
+  .skills-compact .sub-block-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 9px; font-weight: 700; letter-spacing: 1.2px;
+    text-transform: uppercase; text-decoration: underline;
+    margin-bottom: 4px; color: var(--ink);
+  }
+  .skills-compact .tools-line,
+  .skills-compact .lang-line {
+    font-size: 10px; color: var(--slate); line-height: 1.5;
+  }
+  .skills-compact .lang-line strong { font-weight: 700; }
+  .skill-item::before {
+    content: ''; width: 4px; height: 4px;
+    background: var(--gold); transform: rotate(45deg); flex-shrink: 0;
+  }
+
+  .projects-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px 14px;
+  }
+  .proj-card {
+    padding: 7px 9px;
+    border: 1px solid var(--light);
+    background: #fff;
+  }
+  .proj-card h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 11px; font-weight: 700;
+    color: var(--ink); margin-bottom: 1px;
+  }
+  .proj-card .sub {
+    font-size: 8.5px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    color: var(--red); margin-bottom: 3px;
+  }
+  .proj-card p {
+    font-size: 9.5px; color: var(--mid); line-height: 1.4;
+  }
+
+  .footer-strip {
+    grid-column: 1 / -1;
+    background: var(--ink);
+    padding: 7px 32px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 2px solid var(--gold);
+    flex-wrap: wrap; gap: 6px;
+  }
+  .footer-strip span {
+    font-size: 8.5px; letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.35); text-transform: uppercase;
+  }
+  .footer-strip a {
+    font-size: 8.5px; letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.35); text-transform: uppercase;
+    text-decoration: none;
+  }
+  .footer-dot { width: 4px; height: 4px; background: var(--gold); border-radius: 50%; }
+
+  @media print {
+    @page { size: A4; margin: 0; }
+    html, body {
+      width: 210mm; height: 297mm;
+      background: white !important;
+      padding: 0 !important; margin: 0 !important; display: block !important;
+    }
+    body > * { display: none !important; }
+    .page { display: grid !important; }
+    .print-hint { display: none !important; }
+    .page {
+      width: 210mm !important; height: 297mm !important;
+      box-shadow: none !important; overflow: hidden;
+    }
+    .masthead, .footer-strip, .left, .c-icon,
+    .tl-body::before, .sec-head .bar, .proj-card {
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="print-hint">
+  <div class="print-hint-left">
+    <svg viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+    <span>Pour imprimer : <strong>Ctrl+P</strong> ou <strong>Cmd+P</strong> → cocher <strong>« Graphiques d'arrière-plan »</strong>.</span>
+  </div>
+  <div class="print-actions">
+    <button type="button" class="btn-print" onclick="window.print()">Imprimer / PDF</button>
+    <button type="button" class="btn-back" onclick="history.back()">Retour</button>
+  </div>
+</div>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="photo-wrap">
+      <img src="avatar-cv.jpeg" alt="Lamine Ishola">
+    </div>
+    <div class="masthead-info">
+      <div class="masthead-tag">Curriculum Vitæ</div>
+      <h1 class="masthead-name">Hasrafidine Abdel-Lamine <em>Ishola</em></h1>
+      <div class="masthead-byline">
+        Développeur Fullstack <span>·</span> Web &amp; Mobile <span>·</span> Paiement &amp; Traçabilité
+      </div>
+    </div>
+  </header>
+
+  <aside class="left">
+    <section>
+      <div class="side-title">Profil</div>
+      <p class="profile-text">
+        Expert Fullstack basé à Abidjan, spécialisé dans les infrastructures critiques (paiement, traçabilité).
+        Architecture API REST, applications mobiles haute performance (Flutter, Ionic) et rigueur backend (Laravel, NestJS).
+        7+ apps Play Store, 15+ sites livrés, 6+ ans d'expérience.
+      </p>
+    </section>
+
+    <section>
+      <div class="side-title">Contact</div>
+      <ul class="contact-list">
+        <li>
+          <span class="c-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></span>
+          Abidjan, Côte d'Ivoire
+        </li>
+        <li>
+          <span class="c-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></span>
+          <a href="mailto:isholalamine41@gmail.com">isholalamine41@gmail.com</a>
+        </li>
+        <li>
+          <span class="c-icon"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></span>
+          +225 01 72 56 01 15
+        </li>
+        <li>
+          <span class="c-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg></span>
+          <a href="https://github.com/lamine58">github.com/lamine58</a>
+        </li>
+        <li>
+          <span class="c-icon"><svg viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg></span>
+          <a href="https://linkedin.com/in/hasrafidine-abdel-l-ishola-0121a7192">LinkedIn</a>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <div class="side-title">Domaines</div>
+      <div class="tag-list">
+        <span class="tag">Paiement</span>
+        <span class="tag">Fintech</span>
+        <span class="tag">Traçabilité</span>
+        <span class="tag">Mobile</span>
+        <span class="tag">API REST</span>
+        <span class="tag">Offline-first</span>
+      </div>
+    </section>
+
+    <section>
+      <div class="side-title">Qualités</div>
+      <div class="qual-list">
+        <div class="qual-item">Rigueur technique</div>
+        <div class="qual-item">Autonomie &amp; adaptabilité</div>
+        <div class="qual-item">Esprit d'équipe</div>
+        <div class="qual-item">Livraison en production</div>
+        <div class="qual-item">Communication client</div>
+      </div>
+    </section>
+  </aside>
+
+  <main class="right">
+
+    <section>
+      <div class="sec-head"><div class="bar"></div><h2>Formation</h2></div>
+      <div class="edu-grid">
+        <div class="edu-item">
+          <div class="edu-year">2020</div>
+          <div>
+            <div class="edu-title">Master Génie Logiciel</div>
+            <div class="edu-school">HETEC Abidjan</div>
+          </div>
+        </div>
+        <div class="edu-item">
+          <div class="edu-year">2018</div>
+          <div>
+            <div class="edu-title">Licence Informatique Décisionnelle</div>
+            <div class="edu-school">HETEC Abidjan</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><div class="bar"></div><h2>Expériences</h2></div>
+      <div class="timeline">
+
+        <div class="tl-item">
+          <div class="tl-date">2026 –<br>Présent</div>
+          <div class="tl-body">
+            <div class="tl-company">Synelia Group</div>
+            <div class="tl-role">Consultant</div>
+            <ul class="tl-bullets">
+              <li>Développement backend NestJS et APIs REST pour solutions d'entreprise.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-date">2023 –<br>2025</div>
+          <div class="tl-body">
+            <div class="tl-company">IC Digital Trans</div>
+            <div class="tl-role">Consultant Web &amp; Mobile</div>
+            <ul class="tl-bullets">
+              <li>Transformation digitale, architectures évolutives et audit de code.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-date">2022 –<br>Présent</div>
+          <div class="tl-body">
+            <div class="tl-company">Paiement PRO</div>
+            <div class="tl-role">Développeur Full Stack · Support</div>
+            <ul class="tl-bullets">
+              <li>Passerelle de paiement, intégrations marchandes et APIs Fintech.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-date">2020 –<br>Présent</div>
+          <div class="tl-body">
+            <div class="tl-company">ClinicDuWeb · ICT4DEV</div>
+            <div class="tl-role">Consultant<span class="badge">En cours</span></div>
+            <ul class="tl-bullets">
+              <li>Flutter, Ionic et fullstack pour PME et ONG. SEO et mise en production.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-date">2022 –<br>2024</div>
+          <div class="tl-body">
+            <div class="tl-company">SMAHILEY</div>
+            <div class="tl-role">Consultant</div>
+            <ul class="tl-bullets">
+              <li>Développement mobile Flutter et applications hybrides Ionic.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-date">2018 –<br>2020</div>
+          <div class="tl-body">
+            <div class="tl-company">SDSI</div>
+            <div class="tl-role">Développeur PHP</div>
+            <ul class="tl-bullets">
+              <li>Applications d'entreprise PHP, Ionic et développement en équipe.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><div class="bar"></div><h2>Projets livrés</h2></div>
+      <div class="projects-grid">
+        <div class="proj-card">
+          <h4>SETBC</h4>
+          <div class="sub">Conseil du Café-Cacao</div>
+          <p>Traçabilité bord champ du cacao ivoirien — enregistrement et suivi des transactions.</p>
+        </div>
+        <div class="proj-card">
+          <h4>SISRAH</h4>
+          <div class="sub">Ministère Ressources Animales</div>
+          <p>Collecte terrain offline-first pour les exploitants halieutiques.</p>
+        </div>
+        <div class="proj-card">
+          <h4>MUSCOP-CI</h4>
+          <div class="sub">Mutuelle · Play Store</div>
+          <p>Actualité, projets et informations assurance maladie des membres.</p>
+        </div>
+        <div class="proj-card">
+          <h4>XPAYE</h4>
+          <div class="sub">Infrastructure de paiement régionale</div>
+          <p>Interopérabilité et services de paiement multi-pays pour transactions financières transfrontalières.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><div class="bar"></div><h2>Compétences</h2></div>
+      <div class="skills-compact">
+        <div class="skills-grid" style="grid-template-columns:1fr;">
+          <div class="skill-item">Flutter &amp; Dart</div>
+          <div class="skill-item">NestJS &amp; Laravel</div>
+          <div class="skill-item">Vue.js &amp; Nuxt</div>
+          <div class="skill-item">React &amp; TypeScript</div>
+          <div class="skill-item">API REST &amp; intégrations</div>
+          <div class="skill-item">Ionic &amp; offline-first</div>
+          <div class="skill-item">PostgreSQL &amp; MySQL</div>
+        </div>
+        <div>
+          <div class="sub-block-title">Outils</div>
+          <div class="tools-line">Git / GitHub · Postman · Firebase · OneSignal</div>
+          <div class="sub-block-title" style="margin-top:6px;">Langues</div>
+          <div class="lang-line"><strong>Français</strong> maternel · <strong>Anglais</strong> pro</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="footer-strip">
+    <span>Disponible</span>
+    <div class="footer-dot"></div>
+    <span>isholalamine41@gmail.com</span>
+    <div class="footer-dot"></div>
+    <span>+225 01 72 56 01 15</span>
+    <div class="footer-dot"></div>
+    <a href="https://lamine58.github.io/welcome/">Portfolio 3D</a>
+  </div>
+
+</div>
+
+</body>
+</html>
