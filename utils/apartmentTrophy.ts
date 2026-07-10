@@ -2,7 +2,10 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 const TABLE_TOP_Y = 0.58
-const TARGET_HEIGHT = 0.46
+const TROPHY_HEIGHT = 0.46
+const BALL_SIZE = 0.22
+const TROPHY_POS = new THREE.Vector3(-0.1, 0, 0)
+const BALL_POS = new THREE.Vector3(0.14, 0, 0)
 const GOLD = new THREE.Color(0xd4af37)
 
 function tuneTrophyMaterial(material: THREE.Material): THREE.Material {
@@ -46,6 +49,47 @@ function tuneTrophyMaterial(material: THREE.Material): THREE.Material {
   return material
 }
 
+function tuneBallMaterial(material: THREE.Material): THREE.Material {
+  if (material instanceof THREE.MeshStandardMaterial) {
+    const tuned = material.clone()
+    tuned.roughness = Math.max(tuned.roughness - 0.08, 0.35)
+    tuned.metalness = Math.min(tuned.metalness, 0.08)
+    tuned.envMapIntensity = 1.1
+    return tuned
+  }
+
+  if (material instanceof THREE.MeshPhysicalMaterial) {
+    const tuned = material.clone()
+    tuned.roughness = Math.max(tuned.roughness - 0.08, 0.35)
+    tuned.metalness = Math.min(tuned.metalness, 0.08)
+    return tuned
+  }
+
+  return material
+}
+
+function placeOnTable(
+  model: THREE.Object3D,
+  targetSize: number,
+  offset: THREE.Vector3,
+  useHeight = false,
+) {
+  const bounds = new THREE.Box3().setFromObject(model)
+  const size = bounds.getSize(new THREE.Vector3())
+  const scale = useHeight
+    ? targetSize / Math.max(size.y, 0.001)
+    : targetSize / Math.max(size.x, size.y, size.z, 0.001)
+  model.scale.setScalar(scale)
+
+  bounds.setFromObject(model)
+  const center = bounds.getCenter(new THREE.Vector3())
+  model.position.set(
+    offset.x - center.x,
+    TABLE_TOP_Y - bounds.min.y,
+    offset.z - center.z,
+  )
+}
+
 function addTrophyLighting(table: THREE.Object3D) {
   const focus = new THREE.Object3D()
   focus.position.set(0, 0.75, 0)
@@ -65,10 +109,7 @@ function addTrophyLighting(table: THREE.Object3D) {
   table.add(rim)
 }
 
-export async function loadWorldCupTrophy(
-  table: THREE.Object3D,
-  url: string,
-): Promise<THREE.Object3D | null> {
+async function loadTrophyModel(url: string): Promise<THREE.Object3D | null> {
   try {
     const gltf = await new GLTFLoader().loadAsync(url)
     const model = gltf.scene.clone(true)
@@ -85,19 +126,49 @@ export async function loadWorldCupTrophy(
       }
     })
 
-    const bounds = new THREE.Box3().setFromObject(model)
-    const size = bounds.getSize(new THREE.Vector3())
-    const scale = TARGET_HEIGHT / Math.max(size.y, 0.001)
-    model.scale.setScalar(scale)
-
-    bounds.setFromObject(model)
-    const center = bounds.getCenter(new THREE.Vector3())
-    model.position.set(-center.x, TABLE_TOP_Y - bounds.min.y, -center.z)
-
-    table.add(model)
-    addTrophyLighting(table)
+    placeOnTable(model, TROPHY_HEIGHT, TROPHY_POS, true)
     return model
   } catch {
     return null
   }
+}
+
+async function loadBallModel(url: string): Promise<THREE.Object3D | null> {
+  try {
+    const gltf = await new GLTFLoader().loadAsync(url)
+    const model = gltf.scene.clone(true)
+
+    model.traverse((child) => {
+      if (!(child instanceof THREE.Mesh)) return
+      child.castShadow = true
+      child.receiveShadow = true
+
+      if (Array.isArray(child.material)) {
+        child.material = child.material.map(tuneBallMaterial)
+      } else {
+        child.material = tuneBallMaterial(child.material)
+      }
+    })
+
+    placeOnTable(model, BALL_SIZE, BALL_POS)
+    model.rotation.x = -0.08
+    return model
+  } catch {
+    return null
+  }
+}
+
+export async function loadTrophyTableDecor(
+  table: THREE.Object3D,
+  trophyUrl: string,
+  ballUrl: string,
+): Promise<void> {
+  const [trophy, ball] = await Promise.all([
+    loadTrophyModel(trophyUrl),
+    loadBallModel(ballUrl),
+  ])
+
+  if (trophy) table.add(trophy)
+  if (ball) table.add(ball)
+  if (trophy || ball) addTrophyLighting(table)
 }

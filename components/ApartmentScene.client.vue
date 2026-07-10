@@ -22,8 +22,9 @@ import {
 } from '~/utils/apartmentFurniture'
 import { setupTvVideo, type TvVideoHandle } from '~/utils/apartmentTvVideo'
 import shakiraMp4 from '~/assets/images/shakira.mp4?url'
-import { loadWorldCupTrophy } from '~/utils/apartmentTrophy'
+import { loadTrophyTableDecor } from '~/utils/apartmentTrophy'
 import trophyGlb from '~/assets/fab/world-cup-trophy.glb?url'
+import ballGlb from '~/assets/fab/ball-rionda-2026.glb?url'
 import { applyMonitorWallpaper } from '~/utils/apartmentMonitor'
 import { publicAsset } from '~/utils/publicAsset'
 import { configureTexture, disposeObject3D } from '~/utils/threeDispose'
@@ -799,7 +800,7 @@ function init() {
   }
 
   if (furniture.trophyTable) {
-    loadWorldCupTrophy(furniture.trophyTable, trophyGlb)
+    loadTrophyTableDecor(furniture.trophyTable, trophyGlb, ballGlb)
   }
 
   hotspotMeshes.forEach((obj) => {
