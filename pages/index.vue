@@ -3,10 +3,11 @@
     <PlaqueEntranceLoader
       :name="profile.name"
       :full-name="profile.fullName"
-      :scene-ready="sceneReady"
+      :load-complete="loadComplete"
     />
 
     <component
+      v-if="loadComplete"
       :is="sceneComponent"
       ref="sceneRef"
       :doors="doors"
@@ -15,7 +16,7 @@
       @ready="sceneReady = true"
     />
 
-    <header class="hud" :class="{ 'hud--ready': sceneReady }">
+    <header v-if="sceneReady" class="hud" :class="{ 'hud--ready': sceneReady }">
       <div class="hud__brand">
         <img
           :src="profile.avatar"
@@ -26,20 +27,27 @@
         >
         <div>
           <strong>{{ profile.name }}</strong>
-          <span>{{ profile.role }} · {{ profile.headline }}</span>
+          <span>{{ hudSubtitle }}</span>
         </div>
       </div>
-      <p v-if="sceneReady && !activeDoor && !isMobileUniverse" class="hud__hint">
-        <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> se déplacer · Portes & objets cliquables · <kbd>Échap</kbd> fermer
+      <p v-if="!activeDoor && !isMobileUniverse" class="hud__hint">
+        <kbd>↑</kbd><kbd>↓</kbd> avancer / reculer · <kbd>←</kbd><kbd>→</kbd> tourner la vue · Portes & objets cliquables · <kbd>Échap</kbd> fermer
       </p>
+    </header>
+
+    <nav
+      v-if="sceneReady"
+      class="hud-bar"
+      :class="{ 'hud-bar--ready': sceneReady }"
+      aria-label="Actions"
+    >
       <a
-        v-if="sceneReady"
         :href="cvUrl"
         class="hud__cv"
         target="_blank"
         rel="noopener noreferrer"
       >CV PDF</a>
-    </header>
+    </nav>
 
     <DoorInfoPanel
       :door-id="activeDoor"
@@ -68,6 +76,7 @@ definePageMeta({ ssr: false })
 const { profile, projects, mobileProjects, skills, experiences, doors, boardTasks, profileQuote } = usePortfolioData()
 const cvUrl = publicAsset('cv.html')
 
+const loadComplete = ref(false)
 const sceneReady = ref(false)
 const activeDoor = ref<string | null>(null)
 const sceneRef = ref<{ closeAllDoors: (cb?: () => void) => void } | null>(null)
@@ -76,6 +85,29 @@ const isMobileUniverse = ref(false)
 const sceneComponent = computed(() => (
   isMobileUniverse.value ? MobileSwipeScene : ApartmentScene
 ))
+
+const hudSubtitle = computed(() => profile.role)
+
+function startLoad() {
+  const avatar = new Image()
+  avatar.src = profile.avatar
+  const minDelay = new Promise<void>((resolve) => {
+    setTimeout(resolve, 1100)
+  })
+  const avatarReady = new Promise<void>((resolve) => {
+    if (avatar.complete) {
+      resolve()
+      return
+    }
+    avatar.onload = () => resolve()
+    avatar.onerror = () => resolve()
+  })
+
+  Promise.all([minDelay, avatarReady]).then(() => {
+    loadComplete.value = true
+    syncSceneMode()
+  })
+}
 
 function syncSceneMode() {
   const next = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches
@@ -102,7 +134,7 @@ function onGlobalKeydown(e: KeyboardEvent) {
 }
 
 onMounted(() => {
-  syncSceneMode()
+  startLoad()
   window.addEventListener('resize', syncSceneMode)
   window.addEventListener('keydown', onGlobalKeydown)
 })
@@ -197,8 +229,31 @@ onUnmounted(() => {
   border-radius: 3px;
 }
 
-.hud__cv {
+.hud-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 1.35rem;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.65rem;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
   pointer-events: auto;
+  opacity: 0;
+  transform: translate(-50%, 12px);
+  transition: opacity 0.6s, transform 0.6s;
+}
+
+.hud-bar--ready {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.hud__cv {
   padding: 0.45rem 0.9rem;
   font-size: 0.75rem;
   font-weight: 700;
@@ -246,10 +301,19 @@ onUnmounted(() => {
 
   .hud__hint { display: none; }
 
+  .hud-bar {
+    bottom: 0.85rem;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, 12px);
+    justify-content: center;
+  }
+
+  .hud-bar--ready {
+    transform: translate(-50%, 0);
+  }
+
   .hud__cv {
-    position: absolute;
-    top: 0.6rem;
-    right: 0.7rem;
     padding: 0.35rem 0.65rem;
     font-size: 0.65rem;
   }

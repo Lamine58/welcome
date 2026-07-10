@@ -344,14 +344,14 @@ const doorMeta = computed(() => {
 })
 
 const titles: Record<string, string> = {
-  about: 'Salon — Présentation',
+  about: 'Présentation',
   projects: 'Bureau — Réalisations web',
   mobile: 'Chambre — Apps mobile',
   skills: 'Atelier — Stack technique',
   experience: 'Couloir — Parcours pro',
   contact: 'Entrée — Me contacter',
   clock: 'Horloge — Disponibilité',
-  links: 'Salon — Liens utiles',
+  links: 'Liens utiles',
   stats: 'Buffet — Chiffres clés',
   tasks: 'Entrée — Tableau de tâches',
   location: 'Fenêtre — Abidjan',

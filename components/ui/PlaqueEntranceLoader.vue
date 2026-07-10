@@ -27,7 +27,7 @@ const props = withDefaults(
   defineProps<{
     name: string
     fullName?: string
-    sceneReady: boolean
+    loadComplete: boolean
   }>(),
   { fullName: '' },
 )
@@ -37,7 +37,7 @@ const visible = ref(true)
 const displayName = computed(() => props.name || props.fullName || 'Ishola')
 
 watch(
-  () => props.sceneReady,
+  () => props.loadComplete,
   (ready) => {
     if (!ready) return
     setTimeout(() => {

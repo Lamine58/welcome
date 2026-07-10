@@ -463,7 +463,7 @@ export function usePortfolioData() {
   ]
 
   const hotspots: ApartmentHotspot[] = [
-    { id: 'tv', panelId: 'projects', label: 'Télé — Himra', icon: 'tv', hint: 'Cliquer pour lire / pause' },
+    { id: 'tv', panelId: 'projects', label: 'Télé — Shakira', icon: 'tv', hint: 'Cliquer pour lire / pause' },
     { id: 'monitor', panelId: 'projects', label: 'Écran — Projets', icon: 'display', hint: 'Projets en cours' },
     { id: 'books', panelId: 'skills', label: 'Bibliothèque', icon: 'book', hint: 'Stack technique' },
     { id: 'clock', panelId: 'clock', label: 'Horloge', icon: 'clock', hint: 'Heure & disponibilité' },

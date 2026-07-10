@@ -15,6 +15,8 @@ export interface FurnitureBuildResult {
   hotspotMeshes: THREE.Object3D[]
   tvScreen: THREE.Mesh | null
   monitorScreen: THREE.Mesh | null
+  coffeeTable: THREE.Group | null
+  trophyTable: THREE.Group | null
 }
 
 export function tagHotspot(obj: THREE.Object3D, data: HotspotPayload) {
@@ -75,7 +77,6 @@ function displayScreen(
 }
 
 import type { BoardTask } from '~/composables/usePortfolioData'
-import { buildBirthdayDecor } from '~/utils/apartmentBirthday'
 
 function wrapCanvasLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const words = text.split(' ')
@@ -238,11 +239,7 @@ function buildOfficeChair(
   })
 }
 
-export function buildDetailedFurniture(
-  scene: THREE.Scene,
-  lite = false,
-  loadedTextures: THREE.Texture[] = [],
-): FurnitureBuildResult {
+export function buildDetailedFurniture(scene: THREE.Scene, lite = false): FurnitureBuildResult {
   const root = new THREE.Group()
   scene.add(root)
 
@@ -250,6 +247,8 @@ export function buildDetailedFurniture(
   const hotspotMeshes: THREE.Object3D[] = []
   let tvScreen: THREE.Mesh | null = null
   let monitorScreen: THREE.Mesh | null = null
+  let coffeeTable: THREE.Group | null = null
+  let trophyTable: THREE.Group | null = null
 
   const wood = mat(0x6b4423)
   const woodDark = mat(0x4a3728)
@@ -276,6 +275,7 @@ export function buildDetailedFurniture(
   const table = new THREE.Group()
   table.position.set(-1.6, 0, 1.25)
   root.add(table)
+  coffeeTable = table
   box(1.6, 0.06, 0.9, wood, 0, 0.42, 0, table)
   ;[[-0.65, -0.3], [0.65, -0.3], [-0.65, 0.3], [0.65, 0.3]].forEach(([lx, lz]) => {
     box(0.07, 0.42, 0.07, woodDark, lx, 0.21, lz, table)
@@ -288,6 +288,30 @@ export function buildDetailedFurniture(
   hotspotMeshes.push(magazine)
   box(0.06, 0.01, 0.12, mat(0x111111), 0.35, 0.465, -0.05, table)
   box(0.05, 0.005, 0.1, mat(0x336688, { emissive: 0x224466, emissiveIntensity: 0.5 }), 0.35, 0.472, -0.05, table)
+
+  const centerTable = new THREE.Group()
+  centerTable.position.set(0, 0, 0)
+  root.add(centerTable)
+  trophyTable = centerTable
+
+  const tableBrown = mat(0x6b4423, { roughness: 0.68 })
+  const tableBrownDark = mat(0x4a3728, { roughness: 0.72 })
+
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.07, 36), tableBrown)
+  top.position.set(0, 0.545, 0)
+  top.castShadow = true
+  top.receiveShadow = true
+  centerTable.add(top)
+
+  const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.13, 0.5, 20), tableBrownDark)
+  pedestal.position.set(0, 0.26, 0)
+  pedestal.castShadow = true
+  centerTable.add(pedestal)
+
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.42, 0.05, 28), tableBrownDark)
+  base.position.set(0, 0.025, 0)
+  base.castShadow = true
+  centerTable.add(base)
 
   const armchair = new THREE.Group()
   armchair.position.set(-5.2, 0, 1.5)
@@ -391,7 +415,7 @@ export function buildDetailedFurniture(
   box(bezel, screenH, 0.04, bezelMat, screenW / 2 + bezel / 2, screenY, bezelZ, tvUnit)
 
   tvScreen = displayScreen(screenW, screenH, 0, screenY, screenZ, tvUnit)
-  tagHotspot(tvScreen, { id: 'tv', panelId: 'projects', label: 'Télé — Himra', icon: 'tv' })
+  tagHotspot(tvScreen, { id: 'tv', panelId: 'projects', label: 'Télé — Shakira', icon: 'tv' })
   hotspotMeshes.push(tvScreen)
   box(0.08, 0.15, 0.08, mat(0x222222), 0.5, 0.55, 0.1, tvUnit)
 
@@ -507,18 +531,6 @@ export function buildDetailedFurniture(
     swayLeaves.push(sl)
   }
 
-  // —— Cadres muraux (mur nord, éloignés des portes Compétences / Parcours) ——
-  ;[
-    { x: -5.15, y: 2.15, z: -5.95, c: 0xc4a574 },
-    { x: 5.15, y: 2.15, z: -5.95, c: 0x7eb8a4 },
-  ].forEach(({ x, y, z, c }) => {
-    const frame = new THREE.Group()
-    frame.position.set(x, y, z)
-    root.add(frame)
-    box(0.9, 0.65, 0.04, woodDark, 0, 0, 0, frame)
-    box(0.75, 0.5, 0.02, mat(c), 0, 0, 0.02, frame)
-  })
-
   // —— Applique murale ——
   const sconce = new THREE.Mesh(
     new THREE.BoxGeometry(0.15, 0.25, 0.1),
@@ -540,21 +552,19 @@ export function buildDetailedFurniture(
   mirrorGlass.position.z = 0.025
   mirror.add(mirrorGlass)
 
-  buildBirthdayDecor(root, 'Lamine', lite, loadedTextures)
-
-  return { root, swayLeaves, hotspotMeshes, tvScreen, monitorScreen }
+  return { root, swayLeaves, hotspotMeshes, tvScreen, monitorScreen, coffeeTable, trophyTable }
 }
 
 /** Cadre photo au mur (texture cadre + portrait) */
 export function buildWallPhotoFrame(
   frameTexture: THREE.Texture,
   photoTexture: THREE.Texture,
-  room: { w: number; d: number },
+  position: { x: number; y: number; z: number; rotY?: number },
   lite = false,
 ) {
   const group = new THREE.Group()
-  group.position.set(-room.w / 2 + 0.11, 1.85, 1.55)
-  group.rotation.y = Math.PI / 2
+  group.position.set(position.x, position.y, position.z)
+  group.rotation.y = position.rotY ?? Math.PI / 2
 
   const w = 0.92
   const h = 0.92

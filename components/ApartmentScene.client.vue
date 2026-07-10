@@ -21,9 +21,21 @@ import {
   buildWindow,
 } from '~/utils/apartmentFurniture'
 import { setupTvVideo, type TvVideoHandle } from '~/utils/apartmentTvVideo'
+import shakiraMp4 from '~/assets/images/shakira.mp4?url'
+import { loadWorldCupTrophy } from '~/utils/apartmentTrophy'
+import trophyGlb from '~/assets/fab/world-cup-trophy.glb?url'
 import { applyMonitorWallpaper } from '~/utils/apartmentMonitor'
 import { publicAsset } from '~/utils/publicAsset'
 import { configureTexture, disposeObject3D } from '~/utils/threeDispose'
+import {
+  buildPlayerCard,
+  buildWorldCupDecor,
+  loadWorldCupFlagDecor,
+  getPlayerImagePath,
+  makePlayerPlaceholderTexture,
+  PLAYER_CARD_PLACEMENTS,
+  WORLD_CUP_PLAYERS,
+} from '~/utils/apartmentWorldCup'
 
 const props = defineProps<{
   doors: ApartmentDoor[]
@@ -50,6 +62,7 @@ const hotspotMeshes: THREE.Object3D[] = []
 let openDoorId: string | null = null
 let lastHoveredHotspotId: string | null = null
 let tvVideo: TvVideoHandle | null = null
+let tvAutoPlayTimer: ReturnType<typeof setTimeout> | null = null
 
 let renderer: THREE.WebGLRenderer | null = null
 let scene: THREE.Scene
@@ -83,6 +96,8 @@ let hasStoredRestView = false
 
 const keysPressed = new Set<string>()
 const MOVE_SPEED = 0.065
+const TURN_SPEED = 0.032
+const DEFAULT_LOOK_DISTANCE = 2.15
 
 /** Limites intérieures — caméra et cible ne sortent pas de la pièce */
 const ROOM_LIMITS = {
@@ -578,29 +593,60 @@ function updateInteractiveHover() {
   setHotspotHighlight(null)
 }
 
+function getFlatCameraYaw() {
+  const dir = new THREE.Vector3()
+  camera.getWorldDirection(dir)
+  dir.y = 0
+  if (dir.lengthSq() < 0.0001) return 0
+  dir.normalize()
+  return Math.atan2(dir.x, dir.z)
+}
+
+function syncCameraViewToYaw(yaw: number) {
+  const yDiff = controls.target.y - camera.position.y
+  const offset = controls.target.clone().sub(camera.position)
+  const horizontalDist = Math.hypot(offset.x, offset.z) || DEFAULT_LOOK_DISTANCE
+
+  controls.target.set(
+    camera.position.x + Math.sin(yaw) * horizontalDist,
+    camera.position.y + yDiff,
+    camera.position.z + Math.cos(yaw) * horizontalDist,
+  )
+  camera.lookAt(controls.target)
+}
+
 function updateKeyboardMove() {
   if (!controls || props.inputLocked || isZoomed.value || zoomState !== 'idle') return
   if (keysPressed.size === 0) return
 
-  const forward = new THREE.Vector3()
-  camera.getWorldDirection(forward)
-  forward.y = 0
-  if (forward.lengthSq() < 0.001) return
-  forward.normalize()
+  let yaw = getFlatCameraYaw()
+  let changed = false
 
-  const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize()
-  const move = new THREE.Vector3()
+  if (keysPressed.has('ArrowLeft')) {
+    yaw += TURN_SPEED
+    changed = true
+  }
+  if (keysPressed.has('ArrowRight')) {
+    yaw -= TURN_SPEED
+    changed = true
+  }
+  if (keysPressed.has('ArrowLeft') || keysPressed.has('ArrowRight')) {
+    syncCameraViewToYaw(yaw)
+  }
 
-  if (keysPressed.has('ArrowUp')) move.add(forward)
-  if (keysPressed.has('ArrowDown')) move.sub(forward)
-  if (keysPressed.has('ArrowLeft')) move.sub(right)
-  if (keysPressed.has('ArrowRight')) move.add(right)
+  const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw))
+  if (keysPressed.has('ArrowUp')) {
+    camera.position.addScaledVector(forward, MOVE_SPEED)
+    controls.target.addScaledVector(forward, MOVE_SPEED)
+    changed = true
+  }
+  if (keysPressed.has('ArrowDown')) {
+    camera.position.addScaledVector(forward, -MOVE_SPEED)
+    controls.target.addScaledVector(forward, -MOVE_SPEED)
+    changed = true
+  }
 
-  if (move.lengthSq() === 0) return
-  move.normalize().multiplyScalar(MOVE_SPEED)
-
-  controls.target.add(move)
-  camera.position.add(move)
+  if (!changed) return
   enforceRoomBounds()
 }
 
@@ -657,7 +703,7 @@ function animate() {
     updateInteractiveHover()
   }
 
-  tvVideo?.update()
+  tvVideo?.update(camera, renderer ?? undefined)
 
   doorGroups.forEach((g) => {
     const hinge = g.userData.hinge as THREE.Group
@@ -726,13 +772,34 @@ function init() {
   createRoom()
   createLights()
 
-  const furniture = buildDetailedFurniture(scene, perfLite, loadedTextures)
+  const furniture = buildDetailedFurniture(scene, perfLite)
   hotspotMeshes.push(...furniture.hotspotMeshes)
+  buildWorldCupDecor(scene, ROOM, loadedTextures)
+  const texLoader = new THREE.TextureLoader()
+  loadWorldCupFlagDecor(scene, ROOM, texLoader, loadedTextures)
+    .then((flagTextures) => {
+      if (disposed) {
+        flagTextures.forEach((tex) => tex.dispose())
+        return
+      }
+      flagTextures.forEach((tex) => configureTexture(tex, renderer, { lite: perfLite }))
+    })
+    .catch(() => {
+      /* drapeaux optionnels */
+    })
   const windowGroup = buildWindow(scene, ROOM, hotspotMeshes)
   placeDoors()
 
   if (furniture.tvScreen) {
-    tvVideo = setupTvVideo(furniture.tvScreen, publicAsset('himra.mp4'), renderer ?? undefined, perfLite)
+    tvVideo = setupTvVideo(furniture.tvScreen, shakiraMp4, renderer ?? undefined, perfLite)
+    tvAutoPlayTimer = setTimeout(() => {
+      tvAutoPlayTimer = null
+      tvVideo?.play().catch(() => {})
+    }, 3000)
+  }
+
+  if (furniture.trophyTable) {
+    loadWorldCupTrophy(furniture.trophyTable, trophyGlb)
   }
 
   hotspotMeshes.forEach((obj) => {
@@ -742,7 +809,6 @@ function init() {
     }
   })
 
-  const texLoader = new THREE.TextureLoader()
   Promise.all([
     texLoader.loadAsync(publicAsset('cadre.jpeg')),
     texLoader.loadAsync(publicAsset('avatar.jpg')),
@@ -762,7 +828,13 @@ function init() {
       configureTexture(clockTex, renderer, { lite: perfLite })
       configureTexture(monitorTex, renderer, { lite: perfLite })
       loadedTextures.push(frameTex, photoTex, clockTex, monitorTex)
-      scene.add(buildWallPhotoFrame(frameTex, photoTex, ROOM, perfLite))
+      const westWallX = -ROOM.w / 2 + 0.11
+      scene.add(buildWallPhotoFrame(frameTex, photoTex, {
+        x: westWallX,
+        y: 1.85,
+        z: 1.55,
+        rotY: Math.PI / 2,
+      }, perfLite))
       applyWindowTaskBoard(windowGroup, photoTex, boardTasks, loadedTextures)
       scene.add(buildWallClock(clockTex, hotspotMeshes, perfLite))
       if (furniture.monitorScreen) {
@@ -777,6 +849,30 @@ function init() {
     .catch(() => {
       /* textures optionnelles — la scène reste utilisable */
     })
+
+  const playerPositions = PLAYER_CARD_PLACEMENTS
+  Promise.all(
+    WORLD_CUP_PLAYERS.map(async (player, i) => {
+      try {
+        const tex = await texLoader.loadAsync(getPlayerImagePath(player))
+        return { tex, player, i }
+      } catch {
+        const tex = makePlayerPlaceholderTexture(player.name)
+        return { tex, player, i }
+      }
+    }),
+  ).then((results) => {
+    if (disposed) {
+      results.forEach(({ tex }) => tex.dispose())
+      return
+    }
+    results.forEach(({ tex, i }) => {
+      configureTexture(tex, renderer, { lite: perfLite })
+      loadedTextures.push(tex)
+      const spot = playerPositions[i]!
+      buildPlayerCard(tex, spot.x, spot.y, spot.z, scene, spot.rotY)
+    })
+  })
 
   resize()
   window.addEventListener('resize', resize)
@@ -813,6 +909,10 @@ function dispose() {
   window.removeEventListener('keyup', onKeyUp)
   document.removeEventListener('visibilitychange', onVisibilityChange)
   keysPressed.clear()
+  if (tvAutoPlayTimer) {
+    clearTimeout(tvAutoPlayTimer)
+    tvAutoPlayTimer = null
+  }
   controls?.dispose()
   controls = null!
   if (scene) disposeObject3D(scene)
